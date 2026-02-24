@@ -1,0 +1,260 @@
+{
+  "segment": "ORC",
+  "name": "Common Order",
+  "description": "The ORC segment is used to transmit fields that are common to all orders.",
+  "fields": [
+    {
+      "field": 1,
+      "name": "Order Control",
+      "dataType": "ID",
+      "description": "Determines the function of the order segment (NW=New, CA=Cancel, SC=Status Changed, etc.).",
+      "maxLength": 2,
+      "required": true
+    },
+    {
+      "field": 2,
+      "name": "Placer Order Number",
+      "dataType": "EI",
+      "description": "The order number assigned by the placing application.",
+      "components": [
+        {
+          "position": 1,
+          "name": "Entity Identifier",
+          "dataType": "ST"
+        },
+        {
+          "position": 2,
+          "name": "Namespace ID",
+          "dataType": "IS"
+        },
+        {
+          "position": 3,
+          "name": "Universal ID",
+          "dataType": "ST"
+        },
+        {
+          "position": 4,
+          "name": "Universal ID Type",
+          "dataType": "ID"
+        }
+      ]
+    },
+    {
+      "field": 3,
+      "name": "Filler Order Number",
+      "dataType": "EI",
+      "description": "The order number assigned by the filling application (usually the lab or ancillary system). MY CHange!!!",
+      "components": [
+        {
+          "position": 1,
+          "name": "Entity Identifier",
+          "dataType": "ST"
+        },
+        {
+          "position": 2,
+          "name": "Namespace ID",
+          "dataType": "IS"
+        },
+        {
+          "position": 3,
+          "name": "Universal ID",
+          "dataType": "ST"
+        },
+        {
+          "position": 4,
+          "name": "Universal ID Type",
+          "dataType": "ID"
+        }
+      ]
+    },
+    {
+      "field": 4,
+      "name": "Placer Group Number",
+      "dataType": "EI",
+      "description": "Used to group multiple orders into a single requisition."
+    },
+    {
+      "field": 5,
+      "name": "Order Status",
+      "dataType": "ID",
+      "description": "Status of the order (A=Some but not all results, CA=Cancelled, CM=Completed, etc.).",
+      "maxLength": 2
+    },
+    {
+      "field": 6,
+      "name": "Response Flag",
+      "dataType": "ID",
+      "description": "Allows the placer to control the amount of information returned.",
+      "maxLength": 1
+    },
+    {
+      "field": 7,
+      "name": "Quantity/Timing",
+      "dataType": "TQ",
+      "description": "Quantity, interval, duration, and priority of a service (deprecated, use TQ1/TQ2)."
+    },
+    {
+      "field": 8,
+      "name": "Parent Order",
+      "dataType": "EIP",
+      "description": "Relates a child order to its parent order."
+    },
+    {
+      "field": 9,
+      "name": "Date/Time of Transaction",
+      "dataType": "TS",
+      "description": "Date and time of the event that initiated the order.",
+      "maxLength": 26
+    },
+    {
+      "field": 10,
+      "name": "Entered By",
+      "dataType": "XCN",
+      "description": "Identity of the person who actually keyed the request into the application.",
+      "components": [
+        {
+          "position": 1,
+          "name": "ID Number",
+          "dataType": "ST"
+        },
+        {
+          "position": 2,
+          "name": "Family Name",
+          "dataType": "FN"
+        },
+        {
+          "position": 3,
+          "name": "Given Name",
+          "dataType": "ST"
+        }
+      ]
+    },
+    {
+      "field": 11,
+      "name": "Verified By",
+      "dataType": "XCN",
+      "description": "Identity of the person who verified the order."
+    },
+    {
+      "field": 12,
+      "name": "Ordering Provider",
+      "dataType": "XCN",
+      "description": "Identity of the person who is responsible for creating the request.",
+      "components": [
+        {
+          "position": 1,
+          "name": "ID Number",
+          "dataType": "ST"
+        },
+        {
+          "position": 2,
+          "name": "Family Name",
+          "dataType": "FN"
+        },
+        {
+          "position": 3,
+          "name": "Given Name",
+          "dataType": "ST"
+        },
+        {
+          "position": 4,
+          "name": "Second/Middle Name",
+          "dataType": "ST"
+        },
+        {
+          "position": 5,
+          "name": "Suffix",
+          "dataType": "ST"
+        },
+        {
+          "position": 6,
+          "name": "Prefix",
+          "dataType": "ST"
+        },
+        {
+          "position": 7,
+          "name": "Degree",
+          "dataType": "IS"
+        }
+      ]
+    },
+    {
+      "field": 13,
+      "name": "Enterer's Location",
+      "dataType": "PL",
+      "description": "Location of the person who entered the order."
+    },
+    {
+      "field": 14,
+      "name": "Call Back Phone Number",
+      "dataType": "XTN",
+      "description": "Phone number to call for clarification of the order."
+    },
+    {
+      "field": 15,
+      "name": "Order Effective Date/Time",
+      "dataType": "TS",
+      "description": "Date and time the order becomes effective."
+    },
+    {
+      "field": 16,
+      "name": "Order Control Code Reason",
+      "dataType": "CE",
+      "description": "Explanation of the reason for the order event."
+    },
+    {
+      "field": 17,
+      "name": "Entering Organization",
+      "dataType": "CE",
+      "description": "Organization that the enterer belonged to at the time of the order."
+    },
+    {
+      "field": 18,
+      "name": "Entering Device",
+      "dataType": "CE",
+      "description": "The device used for entering the order (terminal, PC, etc.)."
+    },
+    {
+      "field": 19,
+      "name": "Action By",
+      "dataType": "XCN",
+      "description": "Identity of the person who initiated the order event."
+    },
+    {
+      "field": 20,
+      "name": "Advanced Beneficiary Notice Code",
+      "dataType": "CE",
+      "description": "Indicates the status of the ABN for the order."
+    },
+    {
+      "field": 21,
+      "name": "Ordering Facility Name",
+      "dataType": "XON",
+      "description": "Name of the facility that placed the order."
+    },
+    {
+      "field": 22,
+      "name": "Ordering Facility Address",
+      "dataType": "XAD",
+      "description": "Address of the ordering facility."
+    },
+    {
+      "field": 23,
+      "name": "Ordering Facility Phone Number",
+      "dataType": "XTN",
+      "description": "Phone number at the ordering facility."
+    },
+    {
+      "field": 24,
+      "name": "Ordering Provider Address",
+      "dataType": "XAD",
+      "description": "Address of the ordering provider."
+    },
+    {
+      "field": 25,
+      "name": "Order Status Modifier",
+      "dataType": "CWE",
+      "description": "Additional information about the status of the order."
+    }
+  ]
+}

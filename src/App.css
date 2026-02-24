@@ -1,0 +1,131 @@
+/* ==============================
+   App-Level Styles
+   ============================== */
+
+/* Welcome card */
+.app-welcome {
+  padding: var(--space-10);
+  text-align: center;
+}
+
+.app-welcome__content {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.app-welcome__icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-4);
+}
+
+.app-welcome__title {
+  font-size: var(--font-2xl);
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+  background: linear-gradient(135deg, var(--text-primary), var(--accent-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.app-welcome__description {
+  font-size: var(--font-base);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-6);
+}
+
+.app-welcome__features {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  text-align: left;
+}
+
+.app-welcome__feature {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--surface-divider);
+  transition: background var(--transition-fast);
+}
+
+.app-welcome__feature:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.app-welcome__feature-icon {
+  font-size: var(--font-md);
+  flex-shrink: 0;
+}
+
+/* Footer */
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6) 0 var(--space-4);
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+}
+
+.app-footer__dot {
+  opacity: 0.3;
+}
+
+.app-footer__emr-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.app-footer__emr-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--emr-highlight);
+  box-shadow: 0 0 4px rgba(251, 191, 36, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-container {
+    padding: var(--space-3) var(--space-3) var(--space-8);
+  }
+
+  .app-header {
+    flex-direction: column;
+    gap: var(--space-3);
+    align-items: flex-start;
+  }
+
+  .app-header__stats {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .message-selector {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .message-selector__tabs {
+    width: 100%;
+  }
+
+  .hl7-viewer__header {
+    flex-direction: column;
+    gap: var(--space-2);
+    align-items: flex-start;
+  }
+
+  .app-footer {
+    flex-wrap: wrap;
+  }
+}

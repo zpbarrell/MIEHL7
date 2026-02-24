@@ -1,0 +1,94 @@
+{
+    "segment": "AL1",
+    "name": "Patient Allergy Information",
+    "description": "The AL1 segment is used to transmit patient allergy information.",
+    "fields": [
+        {
+            "field": 1,
+            "name": "Set ID - AL1",
+            "dataType": "SI",
+            "description": "Sequence number for AL1 segments.",
+            "maxLength": 4,
+            "required": true
+        },
+        {
+            "field": 2,
+            "name": "Allergen Type Code",
+            "dataType": "CE",
+            "description": "Type of allergen (DA=Drug Allergy, FA=Food Allergy, MA=Misc Allergy, MC=Misc Contraindication, EA=Environmental Allergy, AA=Animal Allergy, PA=Plant Allergy, LA=Pollen Allergy).",
+            "components": [
+                {
+                    "position": 1,
+                    "name": "Identifier",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 2,
+                    "name": "Text",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 3,
+                    "name": "Coding System",
+                    "dataType": "ID"
+                }
+            ]
+        },
+        {
+            "field": 3,
+            "name": "Allergen Code/Mnemonic/Description",
+            "dataType": "CE",
+            "description": "Allergen code and description.",
+            "required": true,
+            "components": [
+                {
+                    "position": 1,
+                    "name": "Identifier",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 2,
+                    "name": "Text",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 3,
+                    "name": "Coding System",
+                    "dataType": "ID"
+                }
+            ]
+        },
+        {
+            "field": 4,
+            "name": "Allergy Severity Code",
+            "dataType": "CE",
+            "description": "Severity of the allergy (SV=Severe, MO=Moderate, MI=Mild, U=Unknown).",
+            "components": [
+                {
+                    "position": 1,
+                    "name": "Identifier",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 2,
+                    "name": "Text",
+                    "dataType": "ST"
+                }
+            ]
+        },
+        {
+            "field": 5,
+            "name": "Allergy Reaction Code",
+            "dataType": "ST",
+            "description": "Specific reactions associated with the allergy.",
+            "maxLength": 15
+        },
+        {
+            "field": 6,
+            "name": "Identification Date",
+            "dataType": "DT",
+            "description": "Date the allergy was identified.",
+            "maxLength": 8
+        }
+    ]
+}

@@ -1,0 +1,362 @@
+{
+  "segment": "PID",
+  "name": "Patient Identification",
+  "description": "The PID segment is used to communicate patient identification information.",
+  "fields": [
+    {
+      "field": 1,
+      "name": "Set ID - PID",
+      "dataType": "SI",
+      "description": "Sequence number used when multiple PID segments are sent in a single message.",
+      "maxLength": 4
+    },
+    {
+      "field": 2,
+      "name": "Patient ID (External)",
+      "dataType": "CX",
+      "description": "External patient identifier (deprecated in v2.3.1+).",
+      "maxLength": 20
+    },
+    {
+      "field": 3,
+      "name": "Patient Identifier List",
+      "dataType": "CX",
+      "description": "List of patient identifiers (MRN, account number, etc.).",
+      "required": true,
+      "components": [
+        {
+          "position": 1,
+          "name": "ID Number",
+          "dataType": "ST"
+        },
+        {
+          "position": 2,
+          "name": "Check Digit",
+          "dataType": "ST"
+        },
+        {
+          "position": 3,
+          "name": "Check Digit Scheme",
+          "dataType": "ID"
+        },
+        {
+          "position": 4,
+          "name": "Assigning Authority",
+          "dataType": "HD"
+        },
+        {
+          "position": 5,
+          "name": "Identifier Type Code",
+          "dataType": "ID"
+        },
+        {
+          "position": 6,
+          "name": "Assigning Facility",
+          "dataType": "HD"
+        }
+      ]
+    },
+    {
+      "field": 4,
+      "name": "Alternate Patient ID",
+      "dataType": "CX",
+      "description": "Alternate patient identifier (deprecated).",
+      "maxLength": 20
+    },
+    {
+      "field": 5,
+      "name": "Patient Name",
+      "dataType": "XPN",
+      "description": "Legal name of the patient.",
+      "required": true,
+      "components": [
+        {
+          "position": 1,
+          "name": "Family Name",
+          "dataType": "FN"
+        },
+        {
+          "position": 2,
+          "name": "Given Name",
+          "dataType": "ST"
+        },
+        {
+          "position": 3,
+          "name": "Second/Middle Name",
+          "dataType": "ST"
+        },
+        {
+          "position": 4,
+          "name": "Suffix",
+          "dataType": "ST"
+        },
+        {
+          "position": 5,
+          "name": "Prefix",
+          "dataType": "ST"
+        },
+        {
+          "position": 6,
+          "name": "Degree",
+          "dataType": "IS"
+        },
+        {
+          "position": 7,
+          "name": "Name Type Code",
+          "dataType": "ID"
+        }
+      ]
+    },
+    {
+      "field": 6,
+      "name": "Mother's Maiden Name",
+      "dataType": "XPN",
+      "description": "Family name under which the patient's mother was born."
+    },
+    {
+      "field": 7,
+      "name": "Date/Time of Birth",
+      "dataType": "TS",
+      "description": "Patient's date and time of birth.",
+      "maxLength": 26
+    },
+    {
+      "field": 8,
+      "name": "Administrative Sex",
+      "dataType": "IS",
+      "description": "Patient's sex (M, F, O, U, A, N).",
+      "maxLength": 1
+    },
+    {
+      "field": 9,
+      "name": "Patient Alias",
+      "dataType": "XPN",
+      "description": "Names by which the patient has been known (deprecated)."
+    },
+    {
+      "field": 10,
+      "name": "Race",
+      "dataType": "CE",
+      "description": "Patient's race.",
+      "components": [
+        {
+          "position": 1,
+          "name": "Identifier",
+          "dataType": "ST"
+        },
+        {
+          "position": 2,
+          "name": "Text",
+          "dataType": "ST"
+        },
+        {
+          "position": 3,
+          "name": "Coding System",
+          "dataType": "ID"
+        }
+      ]
+    },
+    {
+      "field": 11,
+      "name": "Patient Address",
+      "dataType": "XAD",
+      "description": "Mailing address of the patient.",
+      "components": [
+        {
+          "position": 1,
+          "name": "Street Address",
+          "dataType": "SAD"
+        },
+        {
+          "position": 2,
+          "name": "Other Designation",
+          "dataType": "ST"
+        },
+        {
+          "position": 3,
+          "name": "City",
+          "dataType": "ST"
+        },
+        {
+          "position": 4,
+          "name": "State/Province",
+          "dataType": "ST"
+        },
+        {
+          "position": 5,
+          "name": "Zip/Postal Code",
+          "dataType": "ST"
+        },
+        {
+          "position": 6,
+          "name": "Country",
+          "dataType": "ID"
+        },
+        {
+          "position": 7,
+          "name": "Address Type",
+          "dataType": "ID"
+        }
+      ]
+    },
+    {
+      "field": 12,
+      "name": "County Code",
+      "dataType": "IS",
+      "description": "Patient's county code.",
+      "maxLength": 4
+    },
+    {
+      "field": 13,
+      "name": "Phone Number - Home",
+      "dataType": "XTN",
+      "description": "Patient's home phone number.",
+      "components": [
+        {
+          "position": 1,
+          "name": "Telephone Number",
+          "dataType": "ST"
+        },
+        {
+          "position": 2,
+          "name": "Telecommunication Use Code",
+          "dataType": "ID"
+        },
+        {
+          "position": 3,
+          "name": "Telecommunication Equipment Type",
+          "dataType": "ID"
+        }
+      ]
+    },
+    {
+      "field": 14,
+      "name": "Phone Number - Business",
+      "dataType": "XTN",
+      "description": "Patient's business phone number."
+    },
+    {
+      "field": 15,
+      "name": "Primary Language",
+      "dataType": "CE",
+      "description": "Patient's primary language."
+    },
+    {
+      "field": 16,
+      "name": "Marital Status",
+      "dataType": "CE",
+      "description": "Patient's marital status."
+    },
+    {
+      "field": 17,
+      "name": "Religion",
+      "dataType": "CE",
+      "description": "Patient's religion."
+    },
+    {
+      "field": 18,
+      "name": "Patient Account Number",
+      "dataType": "CX",
+      "description": "Patient's account number at the facility.",
+      "components": [
+        {
+          "position": 1,
+          "name": "ID Number",
+          "dataType": "ST"
+        },
+        {
+          "position": 2,
+          "name": "Check Digit",
+          "dataType": "ST"
+        },
+        {
+          "position": 3,
+          "name": "Check Digit Scheme",
+          "dataType": "ID"
+        },
+        {
+          "position": 4,
+          "name": "Assigning Authority",
+          "dataType": "HD"
+        }
+      ]
+    },
+    {
+      "field": 19,
+      "name": "SSN Number - Patient",
+      "dataType": "ST",
+      "description": "Patient's Social Security Number (deprecated, use PID.3).",
+      "maxLength": 16
+    },
+    {
+      "field": 20,
+      "name": "Driver's License Number",
+      "dataType": "DLN",
+      "description": "Patient's driver's license number."
+    },
+    {
+      "field": 21,
+      "name": "Mother's Identifier",
+      "dataType": "CX",
+      "description": "Identifier of mother for newborn patients."
+    },
+    {
+      "field": 22,
+      "name": "Ethnic Group",
+      "dataType": "CE",
+      "description": "Patient's ethnic group."
+    },
+    {
+      "field": 23,
+      "name": "Birth Place",
+      "dataType": "ST",
+      "description": "Patient's place of birth.",
+      "maxLength": 250
+    },
+    {
+      "field": 24,
+      "name": "Multiple Birth Indicator",
+      "dataType": "ID",
+      "description": "Indicates whether the patient was part of a multiple birth.",
+      "maxLength": 1
+    },
+    {
+      "field": 25,
+      "name": "Birth Order",
+      "dataType": "NM",
+      "description": "In a multiple birth, the birth order.",
+      "maxLength": 2
+    },
+    {
+      "field": 26,
+      "name": "Citizenship",
+      "dataType": "CE",
+      "description": "Patient's citizenship."
+    },
+    {
+      "field": 27,
+      "name": "Veterans Military Status",
+      "dataType": "CE",
+      "description": "Military status of a veteran."
+    },
+    {
+      "field": 28,
+      "name": "Nationality",
+      "dataType": "CE",
+      "description": "Patient's nationality (deprecated in v2.4)."
+    },
+    {
+      "field": 29,
+      "name": "Patient Death Date and Time",
+      "dataType": "TS",
+      "description": "Date and time of patient's death."
+    },
+    {
+      "field": 30,
+      "name": "Patient Death Indicator",
+      "dataType": "ID",
+      "description": "Indicates whether the patient is deceased.",
+      "maxLength": 1
+    }
+  ]
+}

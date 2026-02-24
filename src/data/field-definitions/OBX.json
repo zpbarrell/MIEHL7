@@ -1,0 +1,182 @@
+{
+    "segment": "OBX",
+    "name": "Observation/Result",
+    "description": "The OBX segment is used to transmit a single observation or observation fragment.",
+    "fields": [
+        {
+            "field": 1,
+            "name": "Set ID - OBX",
+            "dataType": "SI",
+            "description": "Sequence number for OBX segments within a message.",
+            "maxLength": 4
+        },
+        {
+            "field": 2,
+            "name": "Value Type",
+            "dataType": "ID",
+            "description": "The data type of the observation value (NM=Numeric, ST=String, CE=Coded Element, etc.).",
+            "maxLength": 2,
+            "required": true
+        },
+        {
+            "field": 3,
+            "name": "Observation Identifier",
+            "dataType": "CE",
+            "description": "Unique identifier for the observation (e.g., LOINC code).",
+            "required": true,
+            "components": [
+                {
+                    "position": 1,
+                    "name": "Identifier",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 2,
+                    "name": "Text",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 3,
+                    "name": "Coding System",
+                    "dataType": "ID"
+                },
+                {
+                    "position": 4,
+                    "name": "Alternate Identifier",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 5,
+                    "name": "Alternate Text",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 6,
+                    "name": "Alternate Coding System",
+                    "dataType": "ID"
+                }
+            ]
+        },
+        {
+            "field": 4,
+            "name": "Observation Sub-ID",
+            "dataType": "ST",
+            "description": "Used to distinguish between multiple OBX segments with the same observation identifier.",
+            "maxLength": 20
+        },
+        {
+            "field": 5,
+            "name": "Observation Value",
+            "dataType": "varies",
+            "description": "The value of the observation. Data type is determined by OBX.2."
+        },
+        {
+            "field": 6,
+            "name": "Units",
+            "dataType": "CE",
+            "description": "Units of measure for the observation value.",
+            "components": [
+                {
+                    "position": 1,
+                    "name": "Identifier",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 2,
+                    "name": "Text",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 3,
+                    "name": "Coding System",
+                    "dataType": "ID"
+                }
+            ]
+        },
+        {
+            "field": 7,
+            "name": "References Range",
+            "dataType": "ST",
+            "description": "Normal range for a numeric observation.",
+            "maxLength": 60
+        },
+        {
+            "field": 8,
+            "name": "Abnormal Flags",
+            "dataType": "IS",
+            "description": "Flags indicating whether the result is abnormal (H=High, L=Low, A=Abnormal, etc.).",
+            "maxLength": 5
+        },
+        {
+            "field": 9,
+            "name": "Probability",
+            "dataType": "NM",
+            "description": "Probability of a particular outcome.",
+            "maxLength": 5
+        },
+        {
+            "field": 10,
+            "name": "Nature of Abnormal Test",
+            "dataType": "ID",
+            "description": "Nature of the abnormal test (A=Age-specific, S=Sex-specific, etc.).",
+            "maxLength": 2
+        },
+        {
+            "field": 11,
+            "name": "Observation Result Status",
+            "dataType": "ID",
+            "description": "Status of the observation result (F=Final, P=Preliminary, C=Correction, etc.).",
+            "maxLength": 1,
+            "required": true
+        },
+        {
+            "field": 12,
+            "name": "Effective Date of Reference Range",
+            "dataType": "TS",
+            "description": "Date the reference range was last changed."
+        },
+        {
+            "field": 13,
+            "name": "User Defined Access Checks",
+            "dataType": "ST",
+            "description": "User-defined codes dictating access restrictions.",
+            "maxLength": 20
+        },
+        {
+            "field": 14,
+            "name": "Date/Time of the Observation",
+            "dataType": "TS",
+            "description": "Date/time the observation was made."
+        },
+        {
+            "field": 15,
+            "name": "Producer's ID",
+            "dataType": "CE",
+            "description": "Unique identifier of the producer (lab, instrument, etc.)."
+        },
+        {
+            "field": 16,
+            "name": "Responsible Observer",
+            "dataType": "XCN",
+            "description": "Identity of the person responsible for the observation."
+        },
+        {
+            "field": 17,
+            "name": "Observation Method",
+            "dataType": "CE",
+            "description": "Method used to produce the observation."
+        },
+        {
+            "field": 18,
+            "name": "Equipment Instance Identifier",
+            "dataType": "EI",
+            "description": "Identifier for the equipment that produced the observation."
+        },
+        {
+            "field": 19,
+            "name": "Date/Time of the Analysis",
+            "dataType": "TS",
+            "description": "Date/time the analysis was performed."
+        }
+    ]
+}

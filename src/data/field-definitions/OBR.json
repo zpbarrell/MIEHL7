@@ -1,0 +1,242 @@
+{
+    "segment": "OBR",
+    "name": "Observation Request",
+    "description": "The OBR segment is used to transmit observation request information.",
+    "fields": [
+        {
+            "field": 1,
+            "name": "Set ID - OBR",
+            "dataType": "SI",
+            "description": "Sequence number for OBR segments within a message.",
+            "maxLength": 4
+        },
+        {
+            "field": 2,
+            "name": "Placer Order Number",
+            "dataType": "EI",
+            "description": "Order number assigned by the placer application.",
+            "components": [
+                {
+                    "position": 1,
+                    "name": "Entity Identifier",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 2,
+                    "name": "Namespace ID",
+                    "dataType": "IS"
+                }
+            ]
+        },
+        {
+            "field": 3,
+            "name": "Filler Order Number",
+            "dataType": "EI",
+            "description": "Order number assigned by the filler application.",
+            "components": [
+                {
+                    "position": 1,
+                    "name": "Entity Identifier",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 2,
+                    "name": "Namespace ID",
+                    "dataType": "IS"
+                }
+            ]
+        },
+        {
+            "field": 4,
+            "name": "Universal Service Identifier",
+            "dataType": "CE",
+            "description": "Identifies the observation/test/battery requested.",
+            "required": true,
+            "components": [
+                {
+                    "position": 1,
+                    "name": "Identifier",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 2,
+                    "name": "Text",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 3,
+                    "name": "Coding System",
+                    "dataType": "ID"
+                },
+                {
+                    "position": 4,
+                    "name": "Alternate Identifier",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 5,
+                    "name": "Alternate Text",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 6,
+                    "name": "Alternate Coding System",
+                    "dataType": "ID"
+                }
+            ]
+        },
+        {
+            "field": 5,
+            "name": "Priority",
+            "dataType": "ID",
+            "description": "Priority of the observation request (deprecated, use TQ1).",
+            "maxLength": 2
+        },
+        {
+            "field": 6,
+            "name": "Requested Date/Time",
+            "dataType": "TS",
+            "description": "Date/time the observation was requested (deprecated, use TQ1)."
+        },
+        {
+            "field": 7,
+            "name": "Observation Date/Time",
+            "dataType": "TS",
+            "description": "Clinically relevant date/time of the observation.",
+            "maxLength": 26
+        },
+        {
+            "field": 8,
+            "name": "Observation End Date/Time",
+            "dataType": "TS",
+            "description": "End date/time for the observation (for timed specimens)."
+        },
+        {
+            "field": 9,
+            "name": "Collection Volume",
+            "dataType": "CQ",
+            "description": "Volume of the specimen collected."
+        },
+        {
+            "field": 10,
+            "name": "Collector Identifier",
+            "dataType": "XCN",
+            "description": "Identifier of the person who collected the specimen."
+        },
+        {
+            "field": 11,
+            "name": "Specimen Action Code",
+            "dataType": "ID",
+            "description": "Action to be taken with respect to the specimens.",
+            "maxLength": 1
+        },
+        {
+            "field": 12,
+            "name": "Danger Code",
+            "dataType": "CE",
+            "description": "Codes any known condition of danger associated with the specimen."
+        },
+        {
+            "field": 13,
+            "name": "Relevant Clinical Information",
+            "dataType": "ST",
+            "description": "Additional clinical information about the patient or specimen.",
+            "maxLength": 300
+        },
+        {
+            "field": 14,
+            "name": "Specimen Received Date/Time",
+            "dataType": "TS",
+            "description": "Date/time the specimen was received at the lab."
+        },
+        {
+            "field": 15,
+            "name": "Specimen Source",
+            "dataType": "SPS",
+            "description": "Site and method of specimen collection (deprecated in v2.7)."
+        },
+        {
+            "field": 16,
+            "name": "Ordering Provider",
+            "dataType": "XCN",
+            "description": "Physician who ordered the observation.",
+            "components": [
+                {
+                    "position": 1,
+                    "name": "ID Number",
+                    "dataType": "ST"
+                },
+                {
+                    "position": 2,
+                    "name": "Family Name",
+                    "dataType": "FN"
+                },
+                {
+                    "position": 3,
+                    "name": "Given Name",
+                    "dataType": "ST"
+                }
+            ]
+        },
+        {
+            "field": 17,
+            "name": "Order Callback Phone Number",
+            "dataType": "XTN",
+            "description": "Phone number for callback about the order."
+        },
+        {
+            "field": 18,
+            "name": "Placer Field 1",
+            "dataType": "ST",
+            "description": "User-defined text field sent by the placer.",
+            "maxLength": 60
+        },
+        {
+            "field": 19,
+            "name": "Placer Field 2",
+            "dataType": "ST",
+            "description": "User-defined text field sent by the placer.",
+            "maxLength": 60
+        },
+        {
+            "field": 20,
+            "name": "Filler Field 1",
+            "dataType": "ST",
+            "description": "User-defined text field sent by the filler.",
+            "maxLength": 60
+        },
+        {
+            "field": 21,
+            "name": "Filler Field 2",
+            "dataType": "ST",
+            "description": "User-defined text field sent by the filler.",
+            "maxLength": 60
+        },
+        {
+            "field": 22,
+            "name": "Results Rpt/Status Chng Date/Time",
+            "dataType": "TS",
+            "description": "Date/time the results reported or status changed."
+        },
+        {
+            "field": 23,
+            "name": "Charge to Practice",
+            "dataType": "MOC",
+            "description": "Charge to practice associated with the procedure."
+        },
+        {
+            "field": 24,
+            "name": "Diagnostic Service Section ID",
+            "dataType": "ID",
+            "description": "Section of the diagnostic service (LAB, RAD, etc.).",
+            "maxLength": 10
+        },
+        {
+            "field": 25,
+            "name": "Result Status",
+            "dataType": "ID",
+            "description": "Status of the results (F=Final, P=Preliminary, C=Correction, etc.).",
+            "maxLength": 1
+        }
+    ]
+}

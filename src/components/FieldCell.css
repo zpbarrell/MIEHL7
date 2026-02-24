@@ -1,0 +1,85 @@
+/* ==============================
+   Field Cell Styles
+   ============================== */
+.field-cell {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    padding: 2px 3px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background var(--transition-fast), box-shadow var(--transition-fast);
+    white-space: nowrap;
+    max-width: 200px;
+}
+
+.field-cell:hover {
+    background: rgba(99, 130, 255, 0.12);
+    box-shadow: 0 0 0 1px rgba(99, 130, 255, 0.25);
+}
+
+.field-cell__value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--font-xs);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.field-cell--empty .field-cell__value {
+    color: var(--text-muted);
+    min-width: 6px;
+}
+
+/* EMR Configurable */
+.field-cell--emr {
+    background: var(--emr-highlight-bg);
+    border: 1px solid transparent;
+}
+
+.field-cell--emr:hover {
+    background: rgba(251, 191, 36, 0.2);
+    box-shadow: 0 0 0 1px var(--emr-highlight-border);
+}
+
+.field-cell--emr .field-cell__value {
+    color: var(--emr-highlight);
+}
+
+.field-cell__emr-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--emr-highlight);
+    margin-left: 3px;
+    flex-shrink: 0;
+    box-shadow: 0 0 4px rgba(251, 191, 36, 0.4);
+}
+
+/* Pinned state */
+.field-cell--pinned {
+    background: rgba(99, 130, 255, 0.15);
+    box-shadow: 0 0 0 1px var(--accent-blue), 0 0 8px rgba(99, 130, 255, 0.15);
+}
+
+.field-cell--pinned .field-cell__value {
+    color: var(--accent-blue);
+    font-weight: 500;
+}
+
+.field-cell--pinned.field-cell--emr {
+    box-shadow: 0 0 0 1px var(--emr-highlight), 0 0 8px rgba(251, 191, 36, 0.2);
+}
+
+/* Separator */
+.field-cell--separator {
+    color: var(--text-muted);
+    cursor: default;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--font-xs);
+}
+
+.field-cell--separator:hover {
+    background: none;
+    box-shadow: none;
+}

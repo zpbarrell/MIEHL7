@@ -1,0 +1,610 @@
+/* ==============================
+   Field Tooltip Styles
+   ============================== */
+.field-tooltip {
+    position: fixed;
+    z-index: 10000;
+    min-width: 320px;
+    max-width: 440px;
+    background: var(--bg-tooltip);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg), 0 0 40px rgba(0, 0, 0, 0.4);
+    padding: 0;
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+    pointer-events: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 24px);
+}
+
+.field-tooltip--visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.field-tooltip--emr {
+    border-color: var(--emr-highlight-border);
+    box-shadow: var(--shadow-lg), 0 0 30px rgba(251, 191, 36, 0.1);
+}
+
+.field-tooltip--pinned .field-tooltip__header {
+    cursor: grab;
+    user-select: none;
+}
+
+.field-tooltip--pinned .field-tooltip__header:active {
+    cursor: grabbing;
+}
+
+.field-tooltip--pinned {
+    box-shadow: var(--shadow-lg), 0 0 30px rgba(99, 130, 255, 0.2);
+    border-color: rgba(99, 130, 255, 0.4);
+}
+
+.field-tooltip--pinned.field-tooltip--emr {
+    box-shadow: var(--shadow-lg), 0 0 30px rgba(251, 191, 36, 0.2);
+    border-color: var(--emr-highlight-border);
+}
+
+/* Header */
+.field-tooltip__header {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--surface-divider);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.field-tooltip__header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-1);
+}
+
+.field-tooltip__position {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.field-tooltip__position code {
+    font-size: var(--font-sm);
+    color: var(--accent-cyan);
+    font-weight: 600;
+    background: rgba(56, 189, 248, 0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.field-tooltip__datatype {
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.field-tooltip__pinned-badge {
+    font-size: 0.6rem;
+    color: var(--accent-blue);
+    background: rgba(99, 130, 255, 0.12);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.field-tooltip__name {
+    font-size: var(--font-base);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.field-tooltip__segment-info {
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.field-tooltip__section-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+/* Image Gallery Styles */
+.field-tooltip__image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.gallery-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: zoom-in;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.gallery-item:hover {
+    transform: scale(1.05);
+    border-color: var(--blue-glow);
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.delete-image-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.95);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.gallery-item:hover .delete-image-btn {
+    opacity: 1;
+}
+
+.delete-image-btn:hover {
+    transform: scale(1.15);
+    background: #ef4444;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Lightbox Modal */
+.lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-out;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.lightbox__content {
+    position: relative;
+    max-width: 95vw;
+    max-height: 95vh;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: #000;
+    width: fit-content;
+    height: fit-content;
+}
+
+.lightbox__img {
+    display: block;
+    max-width: 100%;
+    max-height: 95vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.field-tooltip__dropzone {
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 1.25rem;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+/* Header actions (edit + close buttons) */
+.field-tooltip__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex-shrink: 0;
+}
+
+.field-tooltip__edit-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border: 1px solid rgba(99, 130, 255, 0.3);
+    border-radius: 5px;
+    background: rgba(99, 130, 255, 0.1);
+    color: var(--accent-blue);
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.field-tooltip__edit-btn:hover {
+    background: rgba(99, 130, 255, 0.2);
+    border-color: rgba(99, 130, 255, 0.5);
+    box-shadow: 0 0 8px rgba(99, 130, 255, 0.15);
+}
+
+.field-tooltip__close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+    font-size: var(--font-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+}
+
+.field-tooltip__close-btn:hover {
+    background: rgba(248, 113, 113, 0.2);
+    color: var(--accent-red);
+}
+
+/* EMR Badge */
+.field-tooltip__emr-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--emr-highlight-bg);
+    border-bottom: 1px solid var(--emr-highlight-border);
+    color: var(--emr-highlight);
+    font-size: var(--font-sm);
+    font-weight: 600;
+}
+
+.field-tooltip__emr-icon {
+    font-size: var(--font-base);
+}
+
+/* Sections */
+.field-tooltip__section {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--surface-divider);
+}
+
+.field-tooltip__section:last-of-type {
+    border-bottom: none;
+}
+
+.field-tooltip__section-label {
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+    margin-bottom: var(--space-1);
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.field-tooltip__value code {
+    font-size: var(--font-sm);
+    color: var(--accent-green);
+    word-break: break-all;
+}
+
+.field-tooltip__description {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Components */
+.field-tooltip__components {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.field-tooltip__component {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: var(--space-2);
+    align-items: center;
+    font-size: var(--font-xs);
+    padding: 3px 0;
+}
+
+.field-tooltip__component-pos {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+}
+
+.field-tooltip__component-name {
+    color: var(--text-secondary);
+}
+
+.field-tooltip__component-value {
+    font-size: 0.7rem;
+    color: var(--accent-green);
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* EMR Section */
+.field-tooltip__emr-section {
+    background: var(--emr-highlight-bg);
+}
+
+.field-tooltip__emr-location {
+    font-size: var(--font-sm);
+    color: var(--emr-highlight);
+    font-weight: 500;
+    margin-bottom: var(--space-1);
+}
+
+.field-tooltip__emr-notes {
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+    line-height: 1.4;
+    font-style: italic;
+}
+
+.field-tooltip__emr-image-wrapper {
+    margin-top: var(--space-2);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--emr-highlight-border);
+}
+
+.field-tooltip__emr-image {
+    width: 100%;
+    display: block;
+}
+
+/* ==============================
+   Edit Mode
+   ============================== */
+.field-tooltip__edit-field {
+    margin-top: var(--space-2);
+}
+
+.field-tooltip__edit-label {
+    display: block;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.field-tooltip__edit-input {
+    width: 100%;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--surface-border);
+    border-radius: 5px;
+    color: var(--text-primary);
+    font-size: var(--font-sm);
+    font-family: inherit;
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.field-tooltip__edit-input:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(99, 130, 255, 0.15);
+}
+
+.field-tooltip__edit-textarea {
+    width: 100%;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--surface-border);
+    border-radius: 5px;
+    color: var(--text-primary);
+    font-size: var(--font-sm);
+    font-family: inherit;
+    outline: none;
+    resize: vertical;
+    min-height: 48px;
+    line-height: 1.5;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.field-tooltip__edit-textarea:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(99, 130, 255, 0.15);
+}
+
+/* Edit action buttons */
+.field-tooltip__edit-actions {
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-top: 1px solid var(--surface-divider);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.field-tooltip__save-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(52, 211, 153, 0.1));
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    border-radius: 6px;
+    color: var(--accent-green);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+}
+
+.field-tooltip__save-btn:hover {
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.3), rgba(52, 211, 153, 0.2));
+    border-color: rgba(52, 211, 153, 0.5);
+    box-shadow: 0 2px 8px rgba(52, 211, 153, 0.15);
+}
+
+.field-tooltip__cancel-btn {
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--surface-border);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+}
+
+.field-tooltip__cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+/* Image Drop Zone */
+.field-tooltip__image-drop {
+    margin-top: 8px;
+    border: 2px dashed var(--surface-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    background: rgba(255, 255, 255, 0.02);
+    position: relative;
+    overflow: hidden;
+}
+
+.field-tooltip__image-drop:hover {
+    border-color: var(--accent-blue);
+    background: rgba(99, 130, 255, 0.05);
+}
+
+.field-tooltip__image-drop--active {
+    border-color: var(--accent-cyan);
+    background: rgba(56, 189, 248, 0.1);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+}
+
+.field-tooltip__image-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: var(--font-xs);
+}
+
+.field-tooltip__image-empty span:first-child {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.field-tooltip__image-preview {
+    position: relative;
+    width: 100%;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.field-tooltip__image-preview img {
+    width: 100%;
+    display: block;
+}
+
+.field-tooltip__image-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: var(--font-xs);
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.field-tooltip__image-preview:hover .field-tooltip__image-overlay {
+    opacity: 1;
+}
+
+/* Footer tags */
+.field-tooltip__footer {
+    padding: var(--space-2) var(--space-4);
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    border-top: 1px solid var(--surface-divider);
+}
+
+.field-tooltip__tag {
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.field-tooltip__tag--required {
+    background: rgba(248, 113, 113, 0.15);
+    color: var(--accent-red);
+}
