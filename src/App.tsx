@@ -10,7 +10,7 @@ import './App.css';
 function App() {
   const [inventory, setInventory] = useState<Record<string, string[]>>({});
   const [currentVendor, setCurrentVendor] = useState<string>('');
-  const [currentType, setCurrentType] = useState<string>('');
+  const [currentFilename, setCurrentFilename] = useState<string>('');
   const [activeMessage, setActiveMessage] = useState<ParsedMessage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [importingFile, setImportingFile] = useState<{ content: string; name: string } | null>(null);
@@ -20,7 +20,7 @@ function App() {
     loadInventory();
   }, []);
 
-  const loadInventory = async (selectLatest?: { vendor: string, type: string }) => {
+  const loadInventory = async (selectLatest?: { vendor: string, filename: string }) => {
     try {
       const res = await fetch('/api/inventory');
       const data = await res.json();
@@ -30,16 +30,16 @@ function App() {
         // Pick what to load
         if (selectLatest) {
           setCurrentVendor(selectLatest.vendor);
-          setCurrentType(selectLatest.type);
-          loadMessage(selectLatest.vendor, selectLatest.type);
+          setCurrentFilename(selectLatest.filename);
+          loadMessage(selectLatest.vendor, selectLatest.filename);
         } else if (Object.keys(data.inventory).length > 0) {
           const vendors = Object.keys(data.inventory);
           const firstVendor = vendors[0];
-          const firstType = data.inventory[firstVendor][0];
-          if (firstVendor && firstType) {
+          const firstFilename = data.inventory[firstVendor][0];
+          if (firstVendor && firstFilename) {
             setCurrentVendor(firstVendor);
-            setCurrentType(firstType);
-            loadMessage(firstVendor, firstType);
+            setCurrentFilename(firstFilename);
+            loadMessage(firstVendor, firstFilename);
           }
         }
       }
@@ -48,18 +48,18 @@ function App() {
     }
   };
 
-  const loadMessage = async (vendor: string, type: string) => {
-    if (!vendor || !type) return;
+  const loadMessage = async (vendor: string, filename: string) => {
+    if (!vendor || !filename) return;
     setIsLoading(true);
     try {
       const res = await fetch('/api/get-hl7', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vendor, type })
+        body: JSON.stringify({ vendor, filename })
       });
       const data = await res.json();
       if (data.success && data.content) {
-        const parsed = parseHL7Message(data.content, `${type}.hl7`);
+        const parsed = parseHL7Message(data.content, `${filename}.hl7`);
         setActiveMessage(parsed);
       }
     } catch (err) {
@@ -80,7 +80,7 @@ function App() {
     reader.readAsText(file);
   }, []);
 
-  const handleModalSave = async (vendor: string, type: string) => {
+  const handleModalSave = async (vendor: string, type: string, label: string) => {
     if (!importingFile) return;
     setIsLoading(true);
     try {
@@ -90,13 +90,17 @@ function App() {
         body: JSON.stringify({
           vendor,
           type,
+          label,
           content: importingFile.content
         })
       });
       const data = await res.json();
       if (data.success) {
         setImportingFile(null);
-        await loadInventory({ vendor, type });
+        // The filename on server is generated as "{type} - {label}"
+        const safeLabel = label.trim().replace(/[^a-z0-9 _-]/gi, '') || `Imported ${new Date().toLocaleDateString().replace(/\//g, '-')}`;
+        const filename = `${type} - ${safeLabel}`;
+        await loadInventory({ vendor, filename });
       } else {
         alert(`Failed to save: ${data.message}`);
       }
@@ -108,10 +112,58 @@ function App() {
     }
   };
 
-  const handleSelectVendorType = (vendor: string, type: string) => {
+  const handleSelectVendorFilename = (vendor: string, filename: string) => {
     setCurrentVendor(vendor);
-    setCurrentType(type);
-    loadMessage(vendor, type);
+    setCurrentFilename(filename);
+    loadMessage(vendor, filename);
+  };
+
+  const handleDeleteMessage = async (vendor: string, filename: string) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/delete-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vendor, filename })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Refresh inventory
+        const resEnv = await fetch('/api/inventory');
+        const dataEnv = await resEnv.json();
+        if (dataEnv.success) {
+          setInventory(dataEnv.inventory);
+
+          // If we deleted the active message, pick something else
+          if (filename === currentFilename && vendor === currentVendor) {
+            const vendors = Object.keys(dataEnv.inventory);
+            if (vendors.length > 0) {
+              const nextVendor = dataEnv.inventory[vendor] ? vendor : vendors[0];
+              const nextFilename = dataEnv.inventory[nextVendor][0];
+              if (nextFilename) {
+                setCurrentVendor(nextVendor);
+                setCurrentFilename(nextFilename);
+                loadMessage(nextVendor, nextFilename);
+              } else {
+                setActiveMessage(null);
+                setCurrentFilename('');
+              }
+            } else {
+              setActiveMessage(null);
+              setCurrentVendor('');
+              setCurrentFilename('');
+            }
+          }
+        }
+      } else {
+        alert(`Failed to delete: ${data.message}`);
+      }
+    } catch (err: any) {
+      console.error('Delete message failed:', err);
+      alert(`Network error: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Summary stats
@@ -152,8 +204,9 @@ function App() {
       <MessageSelector
         inventory={inventory}
         currentVendor={currentVendor}
-        currentType={currentType}
-        onSelect={handleSelectVendorType}
+        currentFilename={currentFilename}
+        onSelect={handleSelectVendorFilename}
+        onDelete={handleDeleteMessage}
       />
 
       {/* HL7 Viewer */}

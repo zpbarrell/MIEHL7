@@ -62,12 +62,34 @@
 }
 
 /* Types Section */
+.message-selector__types {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.message-selector__type-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.message-selector__type-header {
+    font-size: var(--font-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-left: var(--space-1);
+    opacity: 0.8;
+}
+
 .message-selector__tabs {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    padding-top: var(--space-2);
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    flex-direction: column;
+    gap: var(--space-2);
 }
 
 .message-selector__tab {
@@ -84,6 +106,8 @@
     min-width: 140px;
     color: var(--text-secondary);
     font-size: var(--font-sm);
+    position: relative;
+    /* Ensure delete button is positioned relative to tab */
 }
 
 .message-selector__tab:hover {

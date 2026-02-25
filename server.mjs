@@ -227,7 +227,8 @@ const server = http.createServer(async (req, res) => {
                         const files = await fs.readdir(vendorPath);
                         inventory[vendor.name] = files
                             .filter(f => f.endsWith('.hl7'))
-                            .map(f => f.replace('.hl7', ''));
+                            .map(f => f.replace('.hl7', ''))
+                            .sort();
                     }
                 }
 
@@ -240,15 +241,19 @@ const server = http.createServer(async (req, res) => {
 
         // 5. Save HL7 Message to Library
         if (method === 'POST' && pathname === '/api/save-message') {
-            const { vendor, type, content } = await getBody(req);
-            console.log(`Saving message: ${vendor} -> ${type}`);
+            const { vendor, type, label, content } = await getBody(req);
+            console.log(`Saving message: ${vendor} -> ${type} (${label})`);
 
             if (!vendor || !type || !content) {
                 return sendJSON({ success: false, message: 'Vendor, Type, and Content are required' }, 400);
             }
 
+            // Sanitize label or default to timestamp
+            const safeLabel = (label || '').trim().replace(/[^a-z0-9 _-]/gi, '') || `Imported ${new Date().toLocaleDateString().replace(/\//g, '-')}`;
+            const filename = `${type} - ${safeLabel}`;
+
             const vendorDir = path.join(MESSAGES_DIR, vendor);
-            const filePath = path.join(vendorDir, `${type}.hl7`);
+            const filePath = path.join(vendorDir, `${filename}.hl7`);
 
             try {
                 await fs.mkdir(vendorDir, { recursive: true });
@@ -263,14 +268,17 @@ const server = http.createServer(async (req, res) => {
 
         // 6. Get Specific HL7 Content
         if (method === 'POST' && pathname === '/api/get-hl7') {
-            const { vendor, type } = await getBody(req);
-            console.log(`Fetching HL7: ${vendor} -> ${type}`);
+            const body = await getBody(req).catch(e => ({}));
+            const { vendor, filename, type } = body;
+            const targetFilename = filename || type; // Fallback for backward compatibility
 
-            if (!vendor || !type) {
-                return sendJSON({ success: false, message: 'Vendor and Type are required' }, 400);
+            console.log(`Fetching HL7: ${vendor} -> ${targetFilename} (Body: ${JSON.stringify(body)})`);
+
+            if (!vendor || !targetFilename) {
+                return sendJSON({ success: false, message: 'Vendor and Name are required' }, 400);
             }
 
-            const filePath = path.join(MESSAGES_DIR, vendor, `${type}.hl7`);
+            const filePath = path.join(MESSAGES_DIR, vendor, `${targetFilename}.hl7`);
 
             try {
                 const content = await fs.readFile(filePath, 'utf-8');
@@ -278,6 +286,36 @@ const server = http.createServer(async (req, res) => {
             } catch (err) {
                 console.error(`Failed to read HL7 ${filePath}:`, err);
                 return sendJSON({ success: false, message: 'Message not found', error: err.message }, 404);
+            }
+        }
+
+        // 7. Delete HL7 Message from Library
+        if (method === 'POST' && pathname === '/api/delete-message') {
+            const { vendor, filename } = await getBody(req).catch(e => ({}));
+            console.log(`Deleting HL7 message: ${vendor} -> ${filename}`);
+
+            if (!vendor || !filename) {
+                return sendJSON({ success: false, message: 'Vendor and Filename are required' }, 400);
+            }
+
+            const filePath = path.join(MESSAGES_DIR, vendor, `${filename}.hl7`);
+
+            try {
+                await fs.unlink(filePath);
+                console.log(`Successfully deleted file: ${filePath}`);
+
+                // Optional: Check if directory is empty and cleanup
+                const vendorDir = path.dirname(filePath);
+                const remainingFiles = await fs.readdir(vendorDir).catch(() => []);
+                if (remainingFiles.length === 0) {
+                    await fs.rmdir(vendorDir).catch(() => { });
+                    console.log(`Cleaned up empty vendor directory: ${vendorDir}`);
+                }
+
+                return sendJSON({ success: true, message: `Message ${filename} deleted from ${vendor}` });
+            } catch (err) {
+                console.error(`Failed to delete HL7 ${filePath}:`, err);
+                return sendJSON({ success: false, message: 'File not found or could not be deleted', error: err.message }, 404);
             }
         }
 
@@ -289,7 +327,8 @@ const server = http.createServer(async (req, res) => {
             'POST /api/delete-emr',
             'GET /api/inventory',
             'POST /api/save-message',
-            'POST /api/get-hl7'
+            'POST /api/get-hl7',
+            'POST /api/delete-message'
         ];
         sendJSON({
             success: false,

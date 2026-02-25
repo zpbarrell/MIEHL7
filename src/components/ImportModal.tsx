@@ -5,7 +5,7 @@ interface ImportModalProps {
     fileContent: string;
     fileName: string;
     existingVendors: string[];
-    onSave: (vendor: string, type: string) => void;
+    onSave: (vendor: string, type: string, label: string) => void;
     onCancel: () => void;
     isLoading?: boolean;
 }
@@ -18,11 +18,12 @@ export function ImportModal({ fileContent, fileName, existingVendors, onSave, on
     const [isNewVendor, setIsNewVendor] = useState(existingVendors.length === 0);
     const [newVendorName, setNewVendorName] = useState('');
     const [messageType, setMessageType] = useState('ORM');
+    const [label, setLabel] = useState('');
 
     const handleSave = () => {
         const finalVendor = isNewVendor ? newVendorName.trim() : vendor;
         if (!finalVendor || !messageType) return;
-        onSave(finalVendor, messageType);
+        onSave(finalVendor, messageType, label.trim());
     };
 
     const isSaveDisabled = isNewVendor ? !newVendorName.trim() : !vendor;
@@ -93,6 +94,16 @@ export function ImportModal({ fileContent, fileName, existingVendors, onSave, on
                                 <option key={t} value={t}>{t}</option>
                             ))}
                         </select>
+                    </div>
+
+                    <div className="import-modal__field">
+                        <label className="import-modal__label">Label (e.g. Standard Case, ER Order)</label>
+                        <input
+                            className="import-modal__input"
+                            placeholder="Optional descriptive label..."
+                            value={label}
+                            onChange={e => setLabel(e.target.value)}
+                        />
                     </div>
 
                     <div className="import-modal__field">
