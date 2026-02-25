@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { ParsedField } from '../lib/types';
-import { getFieldDefinition, getComponentDefinition, isEmrConfigurable, getEmrConfig, getSegmentDefinition, saveFieldUpdate, saveEmrUpdate } from '../lib/field-dictionary';
+import { getFieldDefinition, getComponentDefinition, isEmrConfigurable, getEmrConfig, getSegmentDefinition, saveFieldUpdate, saveEmrUpdate, deleteEmrUpdate } from '../lib/field-dictionary';
 import './FieldTooltip.css';
 
 interface FieldTooltipProps {
@@ -38,15 +38,17 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
 
     const fieldDef = getFieldDefinition(segmentName, fieldIndex);
     const segDef = getSegmentDefinition(segmentName);
-    const emrConfigurable = isEmrConfigurable(field.position);
-    const emrConfig = getEmrConfig(field.position);
+
+    const initialEmrConfig = getEmrConfig(field.position);
+    const [localEmrConfig, setLocalEmrConfig] = useState(initialEmrConfig);
+    const emrConfigurable = !!localEmrConfig || isEmrConfigurable(field.position);
 
     const [editFields, setEditFields] = useState<EditableFields & { imagePaths: string[] }>({
         name: fieldDef?.name || '',
         description: fieldDef?.description || '',
-        emrLocation: emrConfig?.emrLocation || '',
-        emrNotes: emrConfig?.notes || '',
-        imagePaths: emrConfig?.imagePaths || [],
+        emrLocation: localEmrConfig?.emrLocation || '',
+        emrNotes: localEmrConfig?.notes || '',
+        imagePaths: localEmrConfig?.imagePaths || [],
     });
 
     const [isDragging, setIsDragging] = useState(false);
@@ -222,6 +224,49 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
         }));
     };
 
+    const handleToggleEmr = async () => {
+        if (!isPinned) return;
+
+        setIsSaving(true);
+        try {
+            if (localEmrConfig) {
+                // Toggle OFF
+                // Use the exact position from the config entry to ensure successful deletion
+                const targetPosition = localEmrConfig.fieldPosition || field.position;
+                const res = await deleteEmrUpdate(targetPosition);
+                if (res.success) {
+                    setLocalEmrConfig(undefined);
+                } else {
+                    alert(`Failed to remove EMR config: ${res.message}`);
+                }
+            } else {
+                // Toggle ON
+                const res = await saveEmrUpdate(field.position, {
+                    fieldName: editFields.name || fieldDef?.name || field.position,
+                    emrLocation: '',
+                    notes: '',
+                    imagePaths: []
+                });
+                if (res.success && res.data) {
+                    setLocalEmrConfig(res.data);
+                    // Also sync edit fields
+                    setEditFields(prev => ({
+                        ...prev,
+                        emrLocation: '',
+                        emrNotes: '',
+                        imagePaths: []
+                    }));
+                } else {
+                    alert(`Failed to enable EMR config: ${res.message}`);
+                }
+            }
+        } catch (err) {
+            console.error('Toggle EMR failed:', err);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleSave = async (e: React.MouseEvent) => {
         e.stopPropagation();
         setIsSaving(true);
@@ -268,9 +313,9 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
         setEditFields({
             name: fieldDef?.name || '',
             description: fieldDef?.description || '',
-            emrLocation: emrConfig?.emrLocation || '',
-            emrNotes: emrConfig?.notes || '',
-            imagePaths: emrConfig?.imagePaths || [],
+            emrLocation: localEmrConfig?.emrLocation || '',
+            emrNotes: localEmrConfig?.notes || '',
+            imagePaths: localEmrConfig?.imagePaths || [],
         });
         setIsEditing(false);
     };
@@ -300,6 +345,20 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
                         )}
                     </div>
                     <div className="field-tooltip__actions">
+                        {isPinned && (
+                            <div className="field-tooltip__emr-toggle-wrap">
+                                <span className="field-tooltip__emr-toggle-label">EMR Setup</span>
+                                <label className="switch">
+                                    <input
+                                        type="checkbox"
+                                        checked={!!localEmrConfig}
+                                        onChange={handleToggleEmr}
+                                        disabled={isSaving}
+                                    />
+                                    <span className="slider"></span>
+                                </label>
+                            </div>
+                        )}
                         {isPinned && !isEditing && (
                             <button
                                 className="field-tooltip__edit-btn"
@@ -400,7 +459,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
             )}
 
             {/* EMR Configuration Details */}
-            {(emrConfig || (isEditing && emrConfigurable)) && (
+            {(localEmrConfig || (isEditing && localEmrConfig)) && (
                 <div className="field-tooltip__section field-tooltip__emr-section">
                     <div className="field-tooltip__section-label">
                         <span className="field-tooltip__emr-icon">📍</span> EMR Configuration Location
@@ -460,15 +519,15 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
                         </>
                     ) : (
                         <>
-                            <div className="field-tooltip__emr-location">{emrConfig?.emrLocation}</div>
-                            {emrConfig?.notes && (
-                                <div className="field-tooltip__emr-notes">{emrConfig.notes}</div>
+                            <div className="field-tooltip__emr-location">{localEmrConfig?.emrLocation}</div>
+                            {localEmrConfig?.notes && (
+                                <div className="field-tooltip__emr-notes">{localEmrConfig.notes}</div>
                             )}
 
                             {/* Read-only Gallery */}
-                            {emrConfig?.imagePaths && emrConfig.imagePaths.length > 0 && (
+                            {localEmrConfig?.imagePaths && localEmrConfig.imagePaths.length > 0 && (
                                 <div className="field-tooltip__image-gallery" style={{ marginTop: '12px' }}>
-                                    {emrConfig.imagePaths.map((img, idx) => (
+                                    {localEmrConfig.imagePaths.map((img: string, idx: number) => (
                                         <div key={idx} className="gallery-item" onClick={() => setMagnifiedImage(img)}>
                                             <img
                                                 src={img}

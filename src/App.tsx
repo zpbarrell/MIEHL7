@@ -1,67 +1,122 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { ParsedMessage } from './lib/types';
-import { parseHL7Message, readHL7File } from './lib/hl7-parser';
+import { parseHL7Message } from './lib/hl7-parser';
 import { DropZone } from './components/DropZone';
 import { MessageSelector } from './components/MessageSelector';
 import { HL7Viewer } from './components/HL7Viewer';
-import sampleMessageRaw from './data/messages/sample-orm.hl7?raw';
+import { ImportModal } from './components/ImportModal';
 import './App.css';
 
 function App() {
-  const [messages, setMessages] = useState<ParsedMessage[]>([]);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [inventory, setInventory] = useState<Record<string, string[]>>({});
+  const [currentVendor, setCurrentVendor] = useState<string>('');
+  const [currentType, setCurrentType] = useState<string>('');
+  const [activeMessage, setActiveMessage] = useState<ParsedMessage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [importingFile, setImportingFile] = useState<{ content: string; name: string } | null>(null);
 
-  // Load sample message on mount
+  // Load inventory on mount
   useEffect(() => {
-    if (sampleMessageRaw) {
-      const parsed = parseHL7Message(sampleMessageRaw, 'sample-orm.hl7');
-      setMessages([parsed]);
-    }
+    loadInventory();
   }, []);
 
-  const handleFilesDropped = useCallback(async (files: File[]) => {
+  const loadInventory = async (selectLatest?: { vendor: string, type: string }) => {
+    try {
+      const res = await fetch('/api/inventory');
+      const data = await res.json();
+      if (data.success) {
+        setInventory(data.inventory);
+
+        // Pick what to load
+        if (selectLatest) {
+          setCurrentVendor(selectLatest.vendor);
+          setCurrentType(selectLatest.type);
+          loadMessage(selectLatest.vendor, selectLatest.type);
+        } else if (Object.keys(data.inventory).length > 0) {
+          const vendors = Object.keys(data.inventory);
+          const firstVendor = vendors[0];
+          const firstType = data.inventory[firstVendor][0];
+          if (firstVendor && firstType) {
+            setCurrentVendor(firstVendor);
+            setCurrentType(firstType);
+            loadMessage(firstVendor, firstType);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load inventory:', err);
+    }
+  };
+
+  const loadMessage = async (vendor: string, type: string) => {
+    if (!vendor || !type) return;
     setIsLoading(true);
     try {
-      const newMessages: ParsedMessage[] = [];
-      for (const file of files) {
-        const text = await readHL7File(file);
-        const parsed = parseHL7Message(text, file.name);
-        newMessages.push(parsed);
-      }
-      setMessages(prev => {
-        const updated = [...prev, ...newMessages];
-        setActiveIndex(updated.length - 1); // Switch to last imported
-        return updated;
+      const res = await fetch('/api/get-hl7', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vendor, type })
       });
+      const data = await res.json();
+      if (data.success && data.content) {
+        const parsed = parseHL7Message(data.content, `${type}.hl7`);
+        setActiveMessage(parsed);
+      }
     } catch (err) {
-      console.error('Failed to parse HL7 file:', err);
+      console.error('Failed to fetch HL7 content:', err);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleFilesDropped = useCallback(async (files: File[]) => {
+    if (files.length === 0) return;
+    const file = files[0]; // Process one at a time for categorization
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      setImportingFile({ content, name: file.name });
+    };
+    reader.readAsText(file);
   }, []);
 
-  const handleSelectMessage = useCallback((index: number) => {
-    setActiveIndex(index);
-  }, []);
+  const handleModalSave = async (vendor: string, type: string) => {
+    if (!importingFile) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/save-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vendor,
+          type,
+          content: importingFile.content
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setImportingFile(null);
+        await loadInventory({ vendor, type });
+      } else {
+        alert(`Failed to save: ${data.message}`);
+      }
+    } catch (err: any) {
+      console.error('Save message failed:', err);
+      alert(`Network error: Could not connect to sidecar server. ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const handleRemoveMessage = useCallback((index: number) => {
-    setMessages(prev => {
-      const updated = prev.filter((_, i) => i !== index);
-      return updated;
-    });
-    setActiveIndex(prev => {
-      if (prev >= messages.length - 1) return Math.max(0, messages.length - 2);
-      if (prev > index) return prev - 1;
-      return prev;
-    });
-  }, [messages.length]);
-
-  const activeMessage = messages[activeIndex];
+  const handleSelectVendorType = (vendor: string, type: string) => {
+    setCurrentVendor(vendor);
+    setCurrentType(type);
+    loadMessage(vendor, type);
+  };
 
   // Summary stats
   const totalSegments = activeMessage?.segments.length || 0;
-  const totalFields = activeMessage?.segments.reduce((sum, seg) => sum + seg.fields.length - 1, 0) || 0;
+  const totalFields = activeMessage?.segments.reduce((sum: number, seg: any) => sum + seg.fields.length - 1, 0) || 0;
 
   return (
     <div className="app-container">
@@ -76,7 +131,10 @@ function App() {
         </div>
         <div className="app-header__stats">
           <div className="app-header__stat">
-            Messages: <span className="app-header__stat-value">{messages.length}</span>
+            Vendors: <span className="app-header__stat-value">{Object.keys(inventory).length}</span>
+          </div>
+          <div className="app-header__stat">
+            Total Messages: <span className="app-header__stat-value">{Object.values(inventory).flat().length}</span>
           </div>
           <div className="app-header__stat">
             Segments: <span className="app-header__stat-value">{totalSegments}</span>
@@ -92,10 +150,10 @@ function App() {
 
       {/* Message selector */}
       <MessageSelector
-        messages={messages}
-        activeIndex={activeIndex}
-        onSelect={handleSelectMessage}
-        onRemove={handleRemoveMessage}
+        inventory={inventory}
+        currentVendor={currentVendor}
+        currentType={currentType}
+        onSelect={handleSelectVendorType}
       />
 
       {/* HL7 Viewer */}
@@ -139,6 +197,18 @@ function App() {
           Yellow = EMR Configurable
         </span>
       </footer>
+
+      {/* Import Modal */}
+      {importingFile && (
+        <ImportModal
+          fileContent={importingFile.content}
+          fileName={importingFile.name}
+          existingVendors={Object.keys(inventory)}
+          onSave={handleModalSave}
+          onCancel={() => setImportingFile(null)}
+          isLoading={isLoading}
+        />
+      )}
     </div>
   );
 }

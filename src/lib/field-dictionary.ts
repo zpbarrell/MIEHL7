@@ -164,3 +164,23 @@ export async function saveEmrUpdate(position: string, data: Partial<EmrConfigEnt
         return { success: false, error };
     }
 }
+export async function deleteEmrUpdate(position: string) {
+    try {
+        const res = await fetch('/api/delete-emr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ position })
+        });
+        const result = await res.json();
+
+        if (result.success) {
+            // Remove from local memory map
+            emrConfigMap.delete(position);
+        }
+        return result;
+    } catch (err) {
+        console.error('Failed to delete EMR update:', err);
+        const error = err instanceof Error ? err.message : String(err);
+        return { success: false, error };
+    }
+}

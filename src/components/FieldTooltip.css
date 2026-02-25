@@ -220,6 +220,92 @@
     object-fit: contain;
 }
 
+/* ==============================
+   EMR Toggle Switch
+   ============================== */
+.field-tooltip__emr-toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 8px;
+    padding-right: 8px;
+    border-right: 1px solid var(--surface-divider);
+}
+
+.field-tooltip__emr-toggle-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.field-tooltip--emr .field-tooltip__emr-toggle-label {
+    color: var(--emr-highlight);
+}
+
+/* Switch UI */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 18px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: .4s;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 12px;
+    width: 12px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+input:checked+.slider {
+    background-color: var(--emr-highlight);
+    border-color: var(--emr-highlight-border);
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px var(--emr-highlight);
+}
+
+input:checked+.slider:before {
+    transform: translateX(14px);
+    background-color: #000;
+}
+
+/* Tooltip container transition */
+.field-tooltip {
+    transition: opacity var(--transition-fast),
+        transform var(--transition-fast),
+        border-color var(--transition-normal),
+        box-shadow var(--transition-normal);
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;

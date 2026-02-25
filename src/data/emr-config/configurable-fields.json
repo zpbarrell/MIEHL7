@@ -26,13 +26,6 @@
       "notes": "Configured per interface connection. Identifies the target system."
     },
     {
-      "fieldPosition": "MSH.6",
-      "fieldName": "Receiving Facility",
-      "emrLocation": "System Configuration > Interface Engine > Receiving Facility",
-      "imagePaths": [],
-      "notes": "Configured per interface connection. Identifies the target facility."
-    },
-    {
       "fieldPosition": "ORC.2",
       "fieldName": "Placer Order Number",
       "emrLocation": "Orders > Order Configuration > Placer Number Generation",
@@ -89,6 +82,13 @@
       "imagePaths": [
         "/emr-images/PID_18_1771963816355.png"
       ]
+    },
+    {
+      "fieldPosition": "MSH.6",
+      "fieldName": "Receiving Facility",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": ""
     }
   ]
 }

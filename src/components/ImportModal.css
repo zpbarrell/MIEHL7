@@ -1,0 +1,139 @@
+/* ==============================
+   Import Modal Styles
+   ============================== */
+.import-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    animation: fadeIn var(--transition-fast) ease-out;
+}
+
+.import-modal__content {
+    width: 100%;
+    max-width: 600px;
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-2xl), 0 0 40px rgba(99, 130, 255, 0.1);
+}
+
+.import-modal__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.import-modal__icon {
+    font-size: 1.8rem;
+}
+
+.import-modal__title {
+    font-size: var(--font-lg);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.import-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.import-modal__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.import-modal__label {
+    font-size: var(--font-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.import-modal__input,
+.import-modal__select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-3);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: var(--font-sm);
+    transition: all var(--transition-fast);
+}
+
+.import-modal__input:focus,
+.import-modal__select:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.import-modal__preview {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    max-height: 150px;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.import-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+}
+
+.import-modal__btn {
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: var(--font-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: 1px solid transparent;
+}
+
+.import-modal__btn--cancel {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+}
+
+.import-modal__btn--cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.import-modal__btn--save {
+    background: var(--accent-blue);
+    color: white;
+}
+
+.import-modal__btn--save:hover {
+    background: #5077ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 130, 255, 0.3);
+}
+
+.import-modal__btn--save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}

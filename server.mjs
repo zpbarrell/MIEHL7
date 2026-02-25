@@ -11,9 +11,14 @@ const DATA_DIR = path.join(__dirname, 'src', 'data');
 const DEFS_DIR = path.join(DATA_DIR, 'field-definitions');
 const EMR_CONFIG_PATH = path.join(DATA_DIR, 'emr-config', 'configurable-fields.json');
 const IMAGES_DIR = path.join(__dirname, 'public', 'emr-images');
+const MESSAGES_DIR = path.join(DATA_DIR, 'messages');
 
 const server = http.createServer(async (req, res) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const pathname = parsedUrl.pathname;
+    const method = req.method;
+
+    console.log(`[${new Date().toISOString()}] ${method} ${pathname}`);
 
     // Helper to send JSON response
     const sendJSON = (data, status = 200) => {
@@ -56,7 +61,7 @@ const server = http.createServer(async (req, res) => {
         // API Endpoints
 
         // 1. Update Field Definition
-        if (req.method === 'POST' && req.url === '/api/update-field') {
+        if (method === 'POST' && pathname === '/api/update-field') {
             const body = await getBody(req);
             const { segment, fieldIndex, name, description } = body;
             const fIndex = parseInt(fieldIndex, 10);
@@ -90,7 +95,7 @@ const server = http.createServer(async (req, res) => {
         }
 
         // 2. Update EMR Config (Metadata + Image)
-        if (req.method === 'POST' && req.url === '/api/update-emr') {
+        if (method === 'POST' && pathname === '/api/update-emr') {
             const body = await getBody(req).catch(e => { throw e; });
             const { position, emrLocation, notes, imagePaths, fieldName } = body;
             console.log(`Updating EMR config for: ${position}`);
@@ -172,9 +177,126 @@ const server = http.createServer(async (req, res) => {
             return sendJSON({ success: true, message: `EMR config for ${position} updated`, data: entry });
         }
 
-        // 404
-        console.warn(`No handler for ${req.method} ${req.url}`);
-        sendJSON({ success: false, message: 'Not Found' }, 404);
+        // 3. Delete EMR Config
+        if (method === 'POST' && pathname === '/api/delete-emr') {
+            const { position } = await getBody(req);
+            console.log(`Deleting EMR config for: ${position}`);
+
+            const content = await fs.readFile(EMR_CONFIG_PATH, 'utf-8');
+            const data = JSON.parse(content);
+
+            const index = data.entries.findIndex(e => e.fieldPosition === position);
+            if (index !== -1) {
+                const entry = data.entries[index];
+                const imagePaths = entry.imagePaths || [];
+
+                // Remove from JSON
+                data.entries.splice(index, 1);
+                await fs.writeFile(EMR_CONFIG_PATH, JSON.stringify(data, null, 2));
+
+                // Cleanup images
+                for (const imgPath of imagePaths) {
+                    try {
+                        if (imgPath.startsWith('/emr-images/')) {
+                            const fullPath = path.join(IMAGES_DIR, path.basename(imgPath));
+                            await fs.unlink(fullPath);
+                            console.log(`Deleted image during EMR removal: ${fullPath}`);
+                        }
+                    } catch (e) {
+                        console.error(`Failed to cleanup image ${imgPath}:`, e);
+                    }
+                }
+
+                console.log(`Successfully deleted EMR config for ${position}`);
+                return sendJSON({ success: true, message: `EMR config for ${position} removed` });
+            }
+
+            return sendJSON({ success: false, message: 'EMR entry not found' }, 404);
+        }
+
+        // 4. Get Library Inventory
+        if (method === 'GET' && pathname === '/api/inventory') {
+            console.log('Fetching library inventory...');
+            try {
+                const vendors = await fs.readdir(MESSAGES_DIR, { withFileTypes: true });
+                const inventory = {};
+
+                for (const vendor of vendors) {
+                    if (vendor.isDirectory()) {
+                        const vendorPath = path.join(MESSAGES_DIR, vendor.name);
+                        const files = await fs.readdir(vendorPath);
+                        inventory[vendor.name] = files
+                            .filter(f => f.endsWith('.hl7'))
+                            .map(f => f.replace('.hl7', ''));
+                    }
+                }
+
+                return sendJSON({ success: true, inventory, serverVersion: '2026-02-25.02 (PathFix)' });
+            } catch (err) {
+                console.error('Failed to read inventory:', err);
+                return sendJSON({ success: false, message: 'Could not read message library', error: err.message }, 500);
+            }
+        }
+
+        // 5. Save HL7 Message to Library
+        if (method === 'POST' && pathname === '/api/save-message') {
+            const { vendor, type, content } = await getBody(req);
+            console.log(`Saving message: ${vendor} -> ${type}`);
+
+            if (!vendor || !type || !content) {
+                return sendJSON({ success: false, message: 'Vendor, Type, and Content are required' }, 400);
+            }
+
+            const vendorDir = path.join(MESSAGES_DIR, vendor);
+            const filePath = path.join(vendorDir, `${type}.hl7`);
+
+            try {
+                await fs.mkdir(vendorDir, { recursive: true });
+                await fs.writeFile(filePath, content, 'utf-8');
+                console.log(`Successfully saved ${filePath}`);
+                return sendJSON({ success: true, message: `Message saved to ${vendor}/${type}` });
+            } catch (err) {
+                console.error(`Failed to save message to ${filePath}:`, err);
+                return sendJSON({ success: false, message: 'Failed to save message', error: err.message }, 500);
+            }
+        }
+
+        // 6. Get Specific HL7 Content
+        if (method === 'POST' && pathname === '/api/get-hl7') {
+            const { vendor, type } = await getBody(req);
+            console.log(`Fetching HL7: ${vendor} -> ${type}`);
+
+            if (!vendor || !type) {
+                return sendJSON({ success: false, message: 'Vendor and Type are required' }, 400);
+            }
+
+            const filePath = path.join(MESSAGES_DIR, vendor, `${type}.hl7`);
+
+            try {
+                const content = await fs.readFile(filePath, 'utf-8');
+                return sendJSON({ success: true, content });
+            } catch (err) {
+                console.error(`Failed to read HL7 ${filePath}:`, err);
+                return sendJSON({ success: false, message: 'Message not found', error: err.message }, 404);
+            }
+        }
+
+        // 404 Catch-all
+        console.warn(`[404] No handler for: ${method} "${pathname}"`);
+        const availableRoutes = [
+            'POST /api/update-field',
+            'POST /api/update-emr',
+            'POST /api/delete-emr',
+            'GET /api/inventory',
+            'POST /api/save-message',
+            'POST /api/get-hl7'
+        ];
+        sendJSON({
+            success: false,
+            message: `Endpoint Not Found: ${method} ${pathname}`,
+            details: `Make sure the URL is exactly one of the supported routes.`,
+            availableRoutes
+        }, 404);
 
     } catch (err) {
         console.error('Server error:', err);

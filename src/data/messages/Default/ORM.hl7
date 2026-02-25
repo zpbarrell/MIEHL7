@@ -1,0 +1,9 @@
+MSH|^~\&|WCDataSend|ENTERPRISEHEALTHDEV|wc_hl7d|Prosolve|20260224074242||ORM^O01|DSD1771936962647554|P|2.3|||||||||||||
+PID|1|WCID:88353|WCID:88353^^^WCID&1.2.840.114398.1.7858&ISO^MR||Test^Garbo^^^^^L||19900101000000|M|||1400 Washington^^Scottown^OH^45678^US^^^Lawrence||4255125859^PRN^PH||||||||||||||||||||||||||
+NTE|1|I|ORDER COMMENT *TEST*|
+PV1|1||^^^ENTERPRISEHEALTHDEV|||||||||||||||||||||||||||||||||||||||||||||||^^^^^1.2.840.114398.1.7858||
+IN1|1||||||||||||||||||||||||||||||||||||||||||||||C||
+GT1|1||TEST^GARBO||1400 WASHINGTON^^SCOTTOWN^OH^45678|4255125859||19900101000000|M||||||||||||||||||||||||||||||||||||||||||||||
+ORC|NW|4970|||Pending||^^^^^0||20260224074238|279^MEDICAL INFORMATICS ENGINEERING^MIE||40054^SYSTEM^PROVIDER^NOT IN|^^^^EASLEY^^^^^Baptist Easley Employee Health||20260224000000||EASLEY||||Baptist Easley Employee Health|200 Fleetwood Dr.^3rd Floor^Easley^SC^29640^US|(864) 455-8994||||||||
+OBR|1|4970||^Stress Test (External) - Includes Resting EKG|0|20260224074238|20260224074100|||||||||40054^SYSTEM^PROVIDER^NOT IN|||||||||||||||order comment *TEST*|||||||||||||||||||
+DG1|1|ICD|I10^HYPERTENSION^I10|HYPERTENSION||||||||||||
