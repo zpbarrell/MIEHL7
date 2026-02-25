@@ -21,7 +21,7 @@
     {
       "fieldPosition": "MSH.5",
       "fieldName": "Receiving Application",
-      "emrLocation": "System Configuration > Interface Engine > Receiving Application ID",
+      "emrLocation": "RTSE: hl7_sending_application",
       "imagePaths": [],
       "notes": "Configured per interface connection. Identifies the target system."
     },
@@ -86,6 +86,22 @@
     {
       "fieldPosition": "MSH.6",
       "fieldName": "Receiving Facility",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": ""
+    },
+    {
+      "fieldPosition": "MSH.11",
+      "fieldName": "Processing ID",
+      "emrLocation": "",
+      "imagePaths": [
+        "/emr-images/MSH_11_1772055398356_0.png"
+      ],
+      "notes": "RTSE: MSH_processing_type"
+    },
+    {
+      "fieldPosition": "MSH.12",
+      "fieldName": "Version ID",
       "emrLocation": "",
       "imagePaths": [],
       "notes": ""

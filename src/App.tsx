@@ -8,8 +8,10 @@ import { ImportModal } from './components/ImportModal';
 import './App.css';
 
 function App() {
-  const [inventory, setInventory] = useState<Record<string, string[]>>({});
-  const [currentVendor, setCurrentVendor] = useState<string>('');
+  const [inventory, setInventory] = useState<Record<string, Record<string, Record<string, string[]>>>>({});
+  const [currentDirection, setCurrentDirection] = useState<string>('Inbound');
+  const [currentType, setCurrentType] = useState<string>('');
+  const [currentVendor, setCurrentVendor] = useState<string>('Default');
   const [currentFilename, setCurrentFilename] = useState<string>('');
   const [activeMessage, setActiveMessage] = useState<ParsedMessage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +22,7 @@ function App() {
     loadInventory();
   }, []);
 
-  const loadInventory = async (selectLatest?: { vendor: string, filename: string }) => {
+  const loadInventory = async (selectLatest?: { direction: string, type: string, vendor: string, filename: string }) => {
     try {
       const res = await fetch('/api/inventory');
       const data = await res.json();
@@ -29,17 +31,35 @@ function App() {
 
         // Pick what to load
         if (selectLatest) {
+          setCurrentDirection(selectLatest.direction);
+          setCurrentType(selectLatest.type);
           setCurrentVendor(selectLatest.vendor);
           setCurrentFilename(selectLatest.filename);
-          loadMessage(selectLatest.vendor, selectLatest.filename);
+          loadMessage(selectLatest.direction, selectLatest.type, selectLatest.vendor, selectLatest.filename);
         } else if (Object.keys(data.inventory).length > 0) {
-          const vendors = Object.keys(data.inventory);
-          const firstVendor = vendors[0];
-          const firstFilename = data.inventory[firstVendor][0];
-          if (firstVendor && firstFilename) {
-            setCurrentVendor(firstVendor);
-            setCurrentFilename(firstFilename);
-            loadMessage(firstVendor, firstFilename);
+          // Find first available message
+          let found = false;
+          for (const d of ['Inbound', 'Outbound']) {
+            if (data.inventory[d]) {
+              const types = Object.keys(data.inventory[d]);
+              if (types.length > 0) {
+                const type = types[0];
+                const vendors = Object.keys(data.inventory[d][type]);
+                if (vendors.length > 0) {
+                  const vendor = vendors[0];
+                  const filename = data.inventory[d][type][vendor][0];
+                  if (filename) {
+                    setCurrentDirection(d);
+                    setCurrentType(type);
+                    setCurrentVendor(vendor);
+                    setCurrentFilename(filename);
+                    loadMessage(d, type, vendor, filename);
+                    found = true;
+                    break;
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -48,14 +68,14 @@ function App() {
     }
   };
 
-  const loadMessage = async (vendor: string, filename: string) => {
-    if (!vendor || !filename) return;
+  const loadMessage = async (direction: string, type: string, vendor: string, filename: string) => {
+    if (!direction || !type || !vendor || !filename) return;
     setIsLoading(true);
     try {
       const res = await fetch('/api/get-hl7', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vendor, filename })
+        body: JSON.stringify({ direction, type, vendor, filename })
       });
       const data = await res.json();
       if (data.success && data.content) {
@@ -80,7 +100,7 @@ function App() {
     reader.readAsText(file);
   }, []);
 
-  const handleModalSave = async (vendor: string, type: string, label: string) => {
+  const handleModalSave = async (direction: string, vendor: string, type: string, label: string) => {
     if (!importingFile) return;
     setIsLoading(true);
     try {
@@ -88,6 +108,7 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          direction,
           vendor,
           type,
           label,
@@ -97,10 +118,8 @@ function App() {
       const data = await res.json();
       if (data.success) {
         setImportingFile(null);
-        // The filename on server is generated as "{type} - {label}"
         const safeLabel = label.trim().replace(/[^a-z0-9 _-]/gi, '') || `Imported ${new Date().toLocaleDateString().replace(/\//g, '-')}`;
-        const filename = `${type} - ${safeLabel}`;
-        await loadInventory({ vendor, filename });
+        await loadInventory({ direction, type, vendor, filename: safeLabel });
       } else {
         alert(`Failed to save: ${data.message}`);
       }
@@ -112,19 +131,45 @@ function App() {
     }
   };
 
-  const handleSelectVendorFilename = (vendor: string, filename: string) => {
-    setCurrentVendor(vendor);
+  const handleSelectMessage = (direction: string, type: string, v: string, filename: string) => {
+    setCurrentDirection(direction);
+    setCurrentType(type);
+    setCurrentVendor(v);
     setCurrentFilename(filename);
-    loadMessage(vendor, filename);
+    loadMessage(direction, type, v, filename);
   };
 
-  const handleDeleteMessage = async (vendor: string, filename: string) => {
+  const handleDirectionChange = (direction: string) => {
+    setCurrentDirection(direction);
+    // Auto-select first message in that direction if possible
+    const dirData = inventory[direction] || {};
+    const types = Object.keys(dirData);
+    if (types.length > 0) {
+      const type = types[0];
+      const vendors = Object.keys(dirData[type]);
+      if (vendors.length > 0) {
+        const vendor = vendors[0];
+        const filename = dirData[type][vendor][0];
+        if (filename) {
+          handleSelectMessage(direction, type, vendor, filename);
+          return;
+        }
+      }
+    }
+    // If empty, clear active message but stay in direction
+    setActiveMessage(null);
+    setCurrentType('');
+    setCurrentVendor('Default');
+    setCurrentFilename('');
+  };
+
+  const handleDeleteMessage = async (direction: string, type: string, v: string, filename: string) => {
     setIsLoading(true);
     try {
       const res = await fetch('/api/delete-message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vendor, filename })
+        body: JSON.stringify({ direction, type, vendor: v, filename })
       });
       const data = await res.json();
       if (data.success) {
@@ -135,22 +180,33 @@ function App() {
           setInventory(dataEnv.inventory);
 
           // If we deleted the active message, pick something else
-          if (filename === currentFilename && vendor === currentVendor) {
-            const vendors = Object.keys(dataEnv.inventory);
-            if (vendors.length > 0) {
-              const nextVendor = dataEnv.inventory[vendor] ? vendor : vendors[0];
-              const nextFilename = dataEnv.inventory[nextVendor][0];
-              if (nextFilename) {
-                setCurrentVendor(nextVendor);
-                setCurrentFilename(nextFilename);
-                loadMessage(nextVendor, nextFilename);
-              } else {
-                setActiveMessage(null);
-                setCurrentFilename('');
+          if (filename === currentFilename && v === currentVendor && type === currentType && direction === currentDirection) {
+            let found = false;
+            for (const d of ['Inbound', 'Outbound']) {
+              const types = Object.keys(dataEnv.inventory[d] || {});
+              if (types.length > 0) {
+                const nt = types[0];
+                const vendors = Object.keys(dataEnv.inventory[d][nt] || {});
+                if (vendors.length > 0) {
+                  const nv = vendors[0];
+                  const nf = dataEnv.inventory[d][nt][nv][0];
+                  if (nf) {
+                    setCurrentDirection(d);
+                    setCurrentType(nt);
+                    setCurrentVendor(nv);
+                    setCurrentFilename(nf);
+                    loadMessage(d, nt, nv, nf);
+                    found = true;
+                    break;
+                  }
+                }
               }
-            } else {
+            }
+            if (!found) {
               setActiveMessage(null);
-              setCurrentVendor('');
+              setCurrentDirection('Inbound');
+              setCurrentType('');
+              setCurrentVendor('Default');
               setCurrentFilename('');
             }
           }
@@ -167,6 +223,17 @@ function App() {
   };
 
   // Summary stats
+  let totalVendors = 0;
+  let totalMessages = 0;
+  Object.values(inventory).forEach(dir => {
+    Object.values(dir).forEach(typeGroup => {
+      totalVendors += Object.keys(typeGroup).length;
+      Object.values(typeGroup).forEach(files => {
+        totalMessages += files.length;
+      });
+    });
+  });
+
   const totalSegments = activeMessage?.segments.length || 0;
   const totalFields = activeMessage?.segments.reduce((sum: number, seg: any) => sum + seg.fields.length - 1, 0) || 0;
 
@@ -183,10 +250,10 @@ function App() {
         </div>
         <div className="app-header__stats">
           <div className="app-header__stat">
-            Vendors: <span className="app-header__stat-value">{Object.keys(inventory).length}</span>
+            Vendors: <span className="app-header__stat-value">{totalVendors}</span>
           </div>
           <div className="app-header__stat">
-            Total Messages: <span className="app-header__stat-value">{Object.values(inventory).flat().length}</span>
+            Total Messages: <span className="app-header__stat-value">{totalMessages}</span>
           </div>
           <div className="app-header__stat">
             Segments: <span className="app-header__stat-value">{totalSegments}</span>
@@ -203,10 +270,13 @@ function App() {
       {/* Message selector */}
       <MessageSelector
         inventory={inventory}
+        currentDirection={currentDirection}
+        currentType={currentType}
         currentVendor={currentVendor}
         currentFilename={currentFilename}
-        onSelect={handleSelectVendorFilename}
+        onSelect={handleSelectMessage}
         onDelete={handleDeleteMessage}
+        onDirectionChange={handleDirectionChange}
       />
 
       {/* HL7 Viewer */}

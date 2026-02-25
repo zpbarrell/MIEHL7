@@ -3,79 +3,95 @@ import { formatHL7Timestamp } from '../lib/hl7-parser';
 import './MessageSelector.css';
 
 interface MessageSelectorProps {
-    inventory: Record<string, string[]>;
+    inventory: Record<string, Record<string, Record<string, string[]>>>;
+    currentDirection: string;
+    currentType: string;
     currentVendor: string;
     currentFilename: string;
-    onSelect: (vendor: string, filename: string) => void;
-    onDelete: (vendor: string, filename: string) => void;
+    onSelect: (direction: string, type: string, v: string, filename: string) => void;
+    onDelete: (direction: string, type: string, v: string, filename: string) => void;
+    onDirectionChange: (direction: string) => void;
 }
 
-export function MessageSelector({ inventory, currentVendor, currentFilename, onSelect, onDelete }: MessageSelectorProps) {
-    const vendors = Object.keys(inventory);
-    if (vendors.length === 0) return null;
+export function MessageSelector({
+    inventory,
+    currentDirection,
+    currentType,
+    currentVendor,
+    currentFilename,
+    onSelect,
+    onDelete,
+    onDirectionChange
+}: MessageSelectorProps) {
+    const directions = Object.keys(inventory);
+    if (directions.length === 0) return null;
 
-    const availableFiles = inventory[currentVendor] || [];
-
-    // Group files by HL7 Type (the part before the " - ")
-    const grouped = availableFiles.reduce((acc, filename) => {
-        const [type, ...rest] = filename.split(' - ');
-        const label = rest.join(' - ') || 'Untitled';
-        if (!acc[type]) acc[type] = [];
-        acc[type].push({ filename, label });
-        return acc;
-    }, {} as Record<string, { filename: string; label: string }[]>);
+    // Get types for the current direction
+    const typeGroups = inventory[currentDirection] || {};
 
     return (
         <div className="message-selector">
-            <div className="message-selector__vendors">
-                <div className="message-selector__label">Vendor Library</div>
-                <div className="message-selector__vendor-list">
-                    {vendors.map(v => (
+            {/* Level 1: Direction Toggle */}
+            <div className="message-selector__directions">
+                <div className="message-selector__direction-tabs">
+                    {['Inbound', 'Outbound'].map(d => (
                         <button
-                            key={v}
-                            className={`message-selector__vendor-btn ${v === currentVendor ? 'message-selector__vendor-btn--active' : ''}`}
-                            onClick={() => onSelect(v, inventory[v][0])}
+                            key={d}
+                            className={`message-selector__direction-btn ${d === currentDirection ? 'active' : ''}`}
+                            onClick={() => onDirectionChange(d)}
                         >
-                            <span className="message-selector__vendor-icon">{v === 'Default' ? '📦' : '🏢'}</span>
-                            {v}
+                            {d === 'Inbound' ? '📥' : '📤'} {d}
                         </button>
                     ))}
                 </div>
             </div>
 
-            {Object.keys(grouped).length > 0 && (
-                <div className="message-selector__types">
-                    {Object.entries(grouped).map(([type, files]) => (
+            {/* Level 2 & 3: Types and Files */}
+            <div className="message-selector__library">
+                {Object.keys(typeGroups).length === 0 ? (
+                    <div className="message-selector__empty">No messages found in {currentDirection}</div>
+                ) : (
+                    Object.entries(typeGroups).sort().map(([type, vendors]) => (
                         <div key={type} className="message-selector__type-group">
                             <div className="message-selector__type-header">{type} Messages</div>
                             <div className="message-selector__tabs">
-                                {files.map(({ filename, label }) => (
-                                    <button
-                                        key={filename}
-                                        className={`message-selector__tab ${filename === currentFilename ? 'message-selector__tab--active' : ''}`}
-                                        onClick={() => onSelect(currentVendor, filename)}
-                                    >
-                                        <span className="message-selector__tab-type">{type}</span>
-                                        <span className="message-selector__tab-info">{label}</span>
-                                        <button
-                                            className="message-selector__tab-delete"
-                                            title="Delete Message"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (window.confirm(`Are you sure you want to delete "${filename}"?`)) {
-                                                    onDelete(currentVendor, filename);
-                                                }
-                                            }}
-                                        >
-                                            ×
-                                        </button>
-                                    </button>
+                                {Object.entries(vendors).map(([vendor, labels]) => (
+                                    labels.map(label => {
+                                        const isActive =
+                                            currentDirection === currentDirection &&
+                                            type === currentType &&
+                                            vendor === currentVendor &&
+                                            label === currentFilename;
+
+                                        return (
+                                            <button
+                                                key={`${vendor}-${label}`}
+                                                className={`message-selector__tab ${isActive ? 'message-selector__tab--active' : ''}`}
+                                                onClick={() => onSelect(currentDirection, type, vendor, label)}
+                                            >
+                                                <span className="message-selector__tab-type">{vendor}</span>
+                                                <span className="message-selector__tab-info">{label}</span>
+                                                <button
+                                                    className="message-selector__tab-delete"
+                                                    title="Delete Message"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (window.confirm(`Are you sure you want to delete "${vendor} - ${label}"?`)) {
+                                                            onDelete(currentDirection, type, vendor, label);
+                                                        }
+                                                    }}
+                                                >
+                                                    ×
+                                                </button>
+                                            </button>
+                                        );
+                                    })
                                 ))}
                             </div>
                         </div>
-                    ))}
-                </div>
-            )}
+                    ))
+                )}
+            </div>
         </div>
     );
 }

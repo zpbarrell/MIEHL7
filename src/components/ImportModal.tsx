@@ -5,7 +5,7 @@ interface ImportModalProps {
     fileContent: string;
     fileName: string;
     existingVendors: string[];
-    onSave: (vendor: string, type: string, label: string) => void;
+    onSave: (direction: string, vendor: string, type: string, label: string) => void;
     onCancel: () => void;
     isLoading?: boolean;
 }
@@ -13,9 +13,9 @@ interface ImportModalProps {
 const MESSAGE_TYPES = ['ORM', 'ORU', 'ADT', 'SIU', 'DFT', 'MDM', 'MFN'];
 
 export function ImportModal({ fileContent, fileName, existingVendors, onSave, onCancel, isLoading }: ImportModalProps) {
-    const defaultVendor = existingVendors.length > 0 ? existingVendors[0] : '';
-    const [vendor, setVendor] = useState(defaultVendor);
-    const [isNewVendor, setIsNewVendor] = useState(existingVendors.length === 0);
+    const [direction, setDirection] = useState('Inbound');
+    const [vendor, setVendor] = useState('Default');
+    const [isNewVendor, setIsNewVendor] = useState(false);
     const [newVendorName, setNewVendorName] = useState('');
     const [messageType, setMessageType] = useState('ORM');
     const [label, setLabel] = useState('');
@@ -23,7 +23,7 @@ export function ImportModal({ fileContent, fileName, existingVendors, onSave, on
     const handleSave = () => {
         const finalVendor = isNewVendor ? newVendorName.trim() : vendor;
         if (!finalVendor || !messageType) return;
-        onSave(finalVendor, messageType, label.trim());
+        onSave(direction, finalVendor, messageType, label.trim());
     };
 
     const isSaveDisabled = isNewVendor ? !newVendorName.trim() : !vendor;
@@ -38,6 +38,24 @@ export function ImportModal({ fileContent, fileName, existingVendors, onSave, on
 
                 <div className="import-modal__body">
                     <div className="import-modal__field">
+                        <label className="import-modal__label">Direction</label>
+                        <div className="import-modal__toggle-group">
+                            <button
+                                className={`import-modal__toggle-btn ${direction === 'Inbound' ? 'active' : ''}`}
+                                onClick={() => setDirection('Inbound')}
+                            >
+                                Inbound
+                            </button>
+                            <button
+                                className={`import-modal__toggle-btn ${direction === 'Outbound' ? 'active' : ''}`}
+                                onClick={() => setDirection('Outbound')}
+                            >
+                                Outbound
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="import-modal__field">
                         <label className="import-modal__label">Vendor</label>
                         {!isNewVendor ? (
                             <div style={{ display: 'flex', gap: '8px' }}>
@@ -47,8 +65,8 @@ export function ImportModal({ fileContent, fileName, existingVendors, onSave, on
                                     value={vendor}
                                     onChange={e => setVendor(e.target.value)}
                                 >
-                                    <option value="">Select Vendor...</option>
-                                    {existingVendors.map(v => (
+                                    <option value="Default">Default</option>
+                                    {existingVendors.filter(v => v !== 'Default').map(v => (
                                         <option key={v} value={v}>{v}</option>
                                     ))}
                                 </select>
@@ -70,15 +88,13 @@ export function ImportModal({ fileContent, fileName, existingVendors, onSave, on
                                     onChange={e => setNewVendorName(e.target.value)}
                                     autoFocus
                                 />
-                                {existingVendors.length > 0 && (
-                                    <button
-                                        className="import-modal__btn import-modal__btn--cancel"
-                                        style={{ padding: '0 12px' }}
-                                        onClick={() => setIsNewVendor(false)}
-                                    >
-                                        Cancel
-                                    </button>
-                                )}
+                                <button
+                                    className="import-modal__btn import-modal__btn--cancel"
+                                    style={{ padding: '0 12px' }}
+                                    onClick={() => setIsNewVendor(false)}
+                                >
+                                    Cancel
+                                </button>
                             </div>
                         )}
                     </div>

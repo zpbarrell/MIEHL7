@@ -214,71 +214,95 @@ const server = http.createServer(async (req, res) => {
             return sendJSON({ success: false, message: 'EMR entry not found' }, 404);
         }
 
-        // 4. Get Library Inventory
+        // 4. Get Library Inventory (3-Level Hierarchy)
         if (method === 'GET' && pathname === '/api/inventory') {
-            console.log('Fetching library inventory...');
+            console.log('Fetching hierarchical inventory...');
             try {
-                const vendors = await fs.readdir(MESSAGES_DIR, { withFileTypes: true });
                 const inventory = {};
+                const directions = ['Inbound', 'Outbound'];
 
-                for (const vendor of vendors) {
-                    if (vendor.isDirectory()) {
-                        const vendorPath = path.join(MESSAGES_DIR, vendor.name);
-                        const files = await fs.readdir(vendorPath);
-                        inventory[vendor.name] = files
-                            .filter(f => f.endsWith('.hl7'))
-                            .map(f => f.replace('.hl7', ''))
-                            .sort();
+                for (const direction of directions) {
+                    const dirPath = path.join(MESSAGES_DIR, direction);
+                    inventory[direction] = {};
+
+                    // Ensure direction folder exists
+                    await fs.mkdir(dirPath, { recursive: true }).catch(() => { });
+
+                    const types = await fs.readdir(dirPath, { withFileTypes: true }).catch(() => []);
+                    for (const typeEnt of types) {
+                        if (typeEnt.isDirectory()) {
+                            const typeName = typeEnt.name;
+                            const typePath = path.join(dirPath, typeName);
+                            inventory[direction][typeName] = {};
+
+                            const vendors = await fs.readdir(typePath, { withFileTypes: true }).catch(() => []);
+                            for (const vendorEnt of vendors) {
+                                if (vendorEnt.isDirectory()) {
+                                    const vendorName = vendorEnt.name;
+                                    const vendorPath = path.join(typePath, vendorName);
+
+                                    const files = await fs.readdir(vendorPath);
+                                    inventory[direction][typeName][vendorName] = files
+                                        .filter(f => f.endsWith('.hl7'))
+                                        .map(f => f.replace('.hl7', ''))
+                                        .sort();
+                                }
+                            }
+                        }
                     }
                 }
 
-                return sendJSON({ success: true, inventory, serverVersion: '2026-02-25.02 (PathFix)' });
+                return sendJSON({ success: true, inventory, serverVersion: '2026-02-25.03 (HierarchFix)' });
             } catch (err) {
-                console.error('Failed to read inventory:', err);
+                console.error('Failed to read hierarchical inventory:', err);
                 return sendJSON({ success: false, message: 'Could not read message library', error: err.message }, 500);
             }
         }
 
-        // 5. Save HL7 Message to Library
+        // 5. Save HL7 Message to Library (Nested)
         if (method === 'POST' && pathname === '/api/save-message') {
-            const { vendor, type, label, content } = await getBody(req);
-            console.log(`Saving message: ${vendor} -> ${type} (${label})`);
+            const { direction, type, vendor, label, content } = await getBody(req);
+            const targetDirection = direction || 'Inbound';
+            const targetVendor = vendor || 'Default';
 
-            if (!vendor || !type || !content) {
-                return sendJSON({ success: false, message: 'Vendor, Type, and Content are required' }, 400);
+            console.log(`Saving message: ${targetDirection}/${type}/${targetVendor} (${label})`);
+
+            if (!type || !content) {
+                return sendJSON({ success: false, message: 'Type and Content are required' }, 400);
             }
 
             // Sanitize label or default to timestamp
             const safeLabel = (label || '').trim().replace(/[^a-z0-9 _-]/gi, '') || `Imported ${new Date().toLocaleDateString().replace(/\//g, '-')}`;
-            const filename = `${type} - ${safeLabel}`;
 
-            const vendorDir = path.join(MESSAGES_DIR, vendor);
-            const filePath = path.join(vendorDir, `${filename}.hl7`);
+            const vendorDir = path.join(MESSAGES_DIR, targetDirection, type, targetVendor);
+            const filePath = path.join(vendorDir, `${safeLabel}.hl7`);
 
             try {
                 await fs.mkdir(vendorDir, { recursive: true });
                 await fs.writeFile(filePath, content, 'utf-8');
                 console.log(`Successfully saved ${filePath}`);
-                return sendJSON({ success: true, message: `Message saved to ${vendor}/${type}` });
+                return sendJSON({ success: true, message: `Message saved to ${targetDirection}/${type}/${targetVendor}` });
             } catch (err) {
                 console.error(`Failed to save message to ${filePath}:`, err);
                 return sendJSON({ success: false, message: 'Failed to save message', error: err.message }, 500);
             }
         }
 
-        // 6. Get Specific HL7 Content
+        // 6. Get Specific HL7 Content (Nested)
         if (method === 'POST' && pathname === '/api/get-hl7') {
             const body = await getBody(req).catch(e => ({}));
-            const { vendor, filename, type } = body;
-            const targetFilename = filename || type; // Fallback for backward compatibility
+            const { direction, type, vendor, filename, label } = body;
 
-            console.log(`Fetching HL7: ${vendor} -> ${targetFilename} (Body: ${JSON.stringify(body)})`);
+            // Reconstruct path: direction/type/vendor/filename.hl7
+            const targetFilename = filename || label;
 
-            if (!vendor || !targetFilename) {
-                return sendJSON({ success: false, message: 'Vendor and Name are required' }, 400);
+            console.log(`Fetching HL7: ${direction}/${type}/${vendor} -> ${targetFilename}`);
+
+            if (!direction || !type || !vendor || !targetFilename) {
+                return sendJSON({ success: false, message: 'Missing path parameters (direction, type, vendor, filename)' }, 400);
             }
 
-            const filePath = path.join(MESSAGES_DIR, vendor, `${targetFilename}.hl7`);
+            const filePath = path.join(MESSAGES_DIR, direction, type, vendor, `${targetFilename}.hl7`);
 
             try {
                 const content = await fs.readFile(filePath, 'utf-8');
@@ -289,30 +313,32 @@ const server = http.createServer(async (req, res) => {
             }
         }
 
-        // 7. Delete HL7 Message from Library
+        // 7. Delete HL7 Message from Library (Nested)
         if (method === 'POST' && pathname === '/api/delete-message') {
-            const { vendor, filename } = await getBody(req).catch(e => ({}));
-            console.log(`Deleting HL7 message: ${vendor} -> ${filename}`);
+            const body = await getBody(req).catch(e => ({}));
+            const { direction, type, vendor, filename } = body;
+            console.log(`Deleting HL7 message: ${direction}/${type}/${vendor} -> ${filename}`);
 
-            if (!vendor || !filename) {
-                return sendJSON({ success: false, message: 'Vendor and Filename are required' }, 400);
+            if (!direction || !type || !vendor || !filename) {
+                return sendJSON({ success: false, message: 'Missing path parameters' }, 400);
             }
 
-            const filePath = path.join(MESSAGES_DIR, vendor, `${filename}.hl7`);
+            const filePath = path.join(MESSAGES_DIR, direction, type, vendor, `${filename}.hl7`);
 
             try {
                 await fs.unlink(filePath);
                 console.log(`Successfully deleted file: ${filePath}`);
 
                 // Optional: Check if directory is empty and cleanup
-                const vendorDir = path.dirname(filePath);
-                const remainingFiles = await fs.readdir(vendorDir).catch(() => []);
-                if (remainingFiles.length === 0) {
-                    await fs.rmdir(vendorDir).catch(() => { });
-                    console.log(`Cleaned up empty vendor directory: ${vendorDir}`);
+                let currentDir = path.dirname(filePath);
+                // Clean up vendor dir if empty
+                const files = await fs.readdir(currentDir).catch(() => []);
+                if (files.length === 0) {
+                    await fs.rmdir(currentDir).catch(() => { });
+                    console.log(`Cleaned up empty directory: ${currentDir}`);
                 }
 
-                return sendJSON({ success: true, message: `Message ${filename} deleted from ${vendor}` });
+                return sendJSON({ success: true, message: `Message ${filename} deleted` });
             } catch (err) {
                 console.error(`Failed to delete HL7 ${filePath}:`, err);
                 return sendJSON({ success: false, message: 'File not found or could not be deleted', error: err.message }, 404);
@@ -343,7 +369,16 @@ const server = http.createServer(async (req, res) => {
     }
 });
 
-server.listen(PORT, () => {
-    console.log(`Sidecar API server running at http://localhost:${PORT}`);
-    console.log(`- Data directory: ${DATA_DIR}`);
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`\n================================================`);
+    console.log(`Sidecar API server v2026-02-25.03`);
+    console.log(`Running at: http://localhost:${PORT}`);
+    console.log(`Network Access: http://192.168.1.126:${PORT}`);
+    console.log(`------------------------------------------------`);
+    console.log(`PATHS CONFIGURATION:`);
+    console.log(`- Data Dir:    ${DATA_DIR}`);
+    console.log(`- Messages:    ${MESSAGES_DIR}`);
+    console.log(`- Images:      ${IMAGES_DIR}`);
+    console.log(`- EMR Config:  ${EMR_CONFIG_PATH}`);
+    console.log(`================================================\n`);
 });
