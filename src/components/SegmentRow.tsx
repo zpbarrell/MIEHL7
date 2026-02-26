@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { ParsedSegment } from '../lib/types';
 import { getSegmentDefinition } from '../lib/field-dictionary';
 import { FieldCell } from './FieldCell';
@@ -20,7 +21,7 @@ const SEGMENT_COLORS: Record<string, string> = {
     IN1: 'var(--segment-in1)',
 };
 
-export function SegmentRow({ segment, index }: SegmentRowProps) {
+export const SegmentRow = memo(function SegmentRow({ segment, index }: SegmentRowProps) {
     const segDef = getSegmentDefinition(segment.name);
     const badgeColor = SEGMENT_COLORS[segment.name] || 'var(--segment-default)';
     const fieldCount = segment.fields.filter((f, i) => i > 0 && f.value).length;
@@ -68,4 +69,4 @@ export function SegmentRow({ segment, index }: SegmentRowProps) {
             </div>
         </div>
     );
-}
+});

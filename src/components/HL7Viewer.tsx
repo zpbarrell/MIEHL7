@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { ParsedMessage } from '../lib/types';
 import { SegmentRow } from './SegmentRow';
 import './HL7Viewer.css';
@@ -7,6 +8,15 @@ interface HL7ViewerProps {
 }
 
 export function HL7Viewer({ message }: HL7ViewerProps) {
+    // Memoize segment count chips so they only recompute when the message changes
+    const segmentCounts = useMemo(() => {
+        const counts = new Map<string, number>();
+        message?.segments.forEach(seg => {
+            counts.set(seg.name, (counts.get(seg.name) || 0) + 1);
+        });
+        return counts;
+    }, [message]);
+
     if (!message || !message.segments.length) {
         return (
             <div className="hl7-viewer glass-card hl7-viewer--empty">
@@ -20,12 +30,6 @@ export function HL7Viewer({ message }: HL7ViewerProps) {
             </div>
         );
     }
-
-    // Group summary
-    const segmentCounts = new Map<string, number>();
-    message.segments.forEach(seg => {
-        segmentCounts.set(seg.name, (segmentCounts.get(seg.name) || 0) + 1);
-    });
 
     return (
         <div className="hl7-viewer glass-card animate-scale-in">

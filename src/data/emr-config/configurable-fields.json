@@ -105,6 +105,13 @@
       "emrLocation": "",
       "imagePaths": [],
       "notes": ""
+    },
+    {
+      "fieldPosition": "MSH.7",
+      "fieldName": "Date/Time of Message",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": ""
     }
   ]
 }

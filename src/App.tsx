@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import type { ParsedMessage } from './lib/types';
 import { parseHL7Message } from './lib/hl7-parser';
 import { DropZone } from './components/DropZone';
@@ -6,6 +6,24 @@ import { MessageSelector } from './components/MessageSelector';
 import { HL7Viewer } from './components/HL7Viewer';
 import { ImportModal } from './components/ImportModal';
 import './App.css';
+
+type Inventory = Record<string, Record<string, Record<string, string[]>>>;
+
+/** Find the first available message in an inventory, preferring Inbound. */
+function findFirstMessage(inv: Inventory): { direction: string; type: string; vendor: string; filename: string } | null {
+  for (const d of ['Inbound', 'Outbound']) {
+    if (!inv[d]) continue;
+    const types = Object.keys(inv[d]);
+    for (const type of types) {
+      const vendors = Object.keys(inv[d][type]);
+      for (const vendor of vendors) {
+        const filename = inv[d][type][vendor][0];
+        if (filename) return { direction: d, type, vendor, filename };
+      }
+    }
+  }
+  return null;
+}
 
 function App() {
   const [inventory, setInventory] = useState<Record<string, Record<string, Record<string, string[]>>>>({});
@@ -36,30 +54,14 @@ function App() {
           setCurrentVendor(selectLatest.vendor);
           setCurrentFilename(selectLatest.filename);
           loadMessage(selectLatest.direction, selectLatest.type, selectLatest.vendor, selectLatest.filename);
-        } else if (Object.keys(data.inventory).length > 0) {
-          // Find first available message
-          let found = false;
-          for (const d of ['Inbound', 'Outbound']) {
-            if (data.inventory[d]) {
-              const types = Object.keys(data.inventory[d]);
-              if (types.length > 0) {
-                const type = types[0];
-                const vendors = Object.keys(data.inventory[d][type]);
-                if (vendors.length > 0) {
-                  const vendor = vendors[0];
-                  const filename = data.inventory[d][type][vendor][0];
-                  if (filename) {
-                    setCurrentDirection(d);
-                    setCurrentType(type);
-                    setCurrentVendor(vendor);
-                    setCurrentFilename(filename);
-                    loadMessage(d, type, vendor, filename);
-                    found = true;
-                    break;
-                  }
-                }
-              }
-            }
+        } else {
+          const first = findFirstMessage(data.inventory);
+          if (first) {
+            setCurrentDirection(first.direction);
+            setCurrentType(first.type);
+            setCurrentVendor(first.vendor);
+            setCurrentFilename(first.filename);
+            loadMessage(first.direction, first.type, first.vendor, first.filename);
           }
         }
       }
@@ -142,19 +144,11 @@ function App() {
   const handleDirectionChange = (direction: string) => {
     setCurrentDirection(direction);
     // Auto-select first message in that direction if possible
-    const dirData = inventory[direction] || {};
-    const types = Object.keys(dirData);
-    if (types.length > 0) {
-      const type = types[0];
-      const vendors = Object.keys(dirData[type]);
-      if (vendors.length > 0) {
-        const vendor = vendors[0];
-        const filename = dirData[type][vendor][0];
-        if (filename) {
-          handleSelectMessage(direction, type, vendor, filename);
-          return;
-        }
-      }
+    const dirInventory: Inventory = { [direction]: inventory[direction] || {} };
+    const first = findFirstMessage(dirInventory);
+    if (first) {
+      handleSelectMessage(first.direction, first.type, first.vendor, first.filename);
+      return;
     }
     // If empty, clear active message but stay in direction
     setActiveMessage(null);
@@ -181,28 +175,14 @@ function App() {
 
           // If we deleted the active message, pick something else
           if (filename === currentFilename && v === currentVendor && type === currentType && direction === currentDirection) {
-            let found = false;
-            for (const d of ['Inbound', 'Outbound']) {
-              const types = Object.keys(dataEnv.inventory[d] || {});
-              if (types.length > 0) {
-                const nt = types[0];
-                const vendors = Object.keys(dataEnv.inventory[d][nt] || {});
-                if (vendors.length > 0) {
-                  const nv = vendors[0];
-                  const nf = dataEnv.inventory[d][nt][nv][0];
-                  if (nf) {
-                    setCurrentDirection(d);
-                    setCurrentType(nt);
-                    setCurrentVendor(nv);
-                    setCurrentFilename(nf);
-                    loadMessage(d, nt, nv, nf);
-                    found = true;
-                    break;
-                  }
-                }
-              }
-            }
-            if (!found) {
+            const first = findFirstMessage(dataEnv.inventory);
+            if (first) {
+              setCurrentDirection(first.direction);
+              setCurrentType(first.type);
+              setCurrentVendor(first.vendor);
+              setCurrentFilename(first.filename);
+              loadMessage(first.direction, first.type, first.vendor, first.filename);
+            } else {
               setActiveMessage(null);
               setCurrentDirection('Inbound');
               setCurrentType('');
@@ -222,20 +202,26 @@ function App() {
     }
   };
 
-  // Summary stats
-  let totalVendors = 0;
-  let totalMessages = 0;
-  Object.values(inventory).forEach(dir => {
-    Object.values(dir).forEach(typeGroup => {
-      totalVendors += Object.keys(typeGroup).length;
-      Object.values(typeGroup).forEach(files => {
-        totalMessages += files.length;
+  // Summary stats (memoized — only recompute when inventory or active message changes)
+  const { totalVendors, totalMessages } = useMemo(() => {
+    let vendors = 0;
+    let messages = 0;
+    Object.values(inventory).forEach(dir => {
+      Object.values(dir).forEach(typeGroup => {
+        vendors += Object.keys(typeGroup).length;
+        Object.values(typeGroup).forEach(files => {
+          messages += files.length;
+        });
       });
     });
-  });
+    return { totalVendors: vendors, totalMessages: messages };
+  }, [inventory]);
 
   const totalSegments = activeMessage?.segments.length || 0;
-  const totalFields = activeMessage?.segments.reduce((sum: number, seg: any) => sum + seg.fields.length - 1, 0) || 0;
+  const totalFields = useMemo(() =>
+    activeMessage?.segments.reduce((sum: number, seg: any) => sum + seg.fields.length - 1, 0) || 0,
+    [activeMessage]
+  );
 
   return (
     <div className="app-container">

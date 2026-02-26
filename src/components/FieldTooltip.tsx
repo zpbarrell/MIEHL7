@@ -22,6 +22,8 @@ interface EditableFields {
 
 export const FieldTooltip: React.FC<FieldTooltipProps> = ({
     field,
+    segmentName,
+    fieldIndex,
     anchorRect,
     onClose,
     isPinned = false
@@ -32,9 +34,6 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const tooltipRef = useRef<HTMLDivElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
-
-    const segmentName = field.position.split('.')[0];
-    const fieldIndex = parseInt(field.position.split('.')[1], 10);
 
     const fieldDef = getFieldDefinition(segmentName, fieldIndex);
     const segDef = getSegmentDefinition(segmentName);

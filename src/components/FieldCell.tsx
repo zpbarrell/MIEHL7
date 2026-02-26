@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, memo } from 'react';
 import type { ParsedField } from '../lib/types';
 import { isEmrConfigurable, getFieldLabel } from '../lib/field-dictionary';
 import { FieldTooltip } from './FieldTooltip';
@@ -10,12 +10,17 @@ interface FieldCellProps {
     fieldIndex: number;
 }
 
-export function FieldCell({ field, segmentName, fieldIndex }: FieldCellProps) {
+export const FieldCell = memo(function FieldCell({ field, segmentName, fieldIndex }: FieldCellProps) {
     const [showTooltip, setShowTooltip] = useState(false);
     const [isPinned, setIsPinned] = useState(false);
     const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
     const cellRef = useRef<HTMLSpanElement>(null);
     const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+    // Cleanup hover timeout on unmount
+    useEffect(() => {
+        return () => clearTimeout(timeoutRef.current);
+    }, []);
 
     const emrConfigurable = isEmrConfigurable(`${segmentName}.${fieldIndex}`);
     const label = getFieldLabel(`${segmentName}.${fieldIndex}`);
@@ -115,4 +120,4 @@ export function FieldCell({ field, segmentName, fieldIndex }: FieldCellProps) {
             )}
         </>
     );
-}
+});

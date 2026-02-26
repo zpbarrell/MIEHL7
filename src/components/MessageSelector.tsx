@@ -1,5 +1,3 @@
-import type { ParsedMessage } from '../lib/types';
-import { formatHL7Timestamp } from '../lib/hl7-parser';
 import './MessageSelector.css';
 
 interface MessageSelectorProps {
@@ -58,7 +56,6 @@ export function MessageSelector({
                                 {Object.entries(vendors).map(([vendor, labels]) => (
                                     labels.map(label => {
                                         const isActive =
-                                            currentDirection === currentDirection &&
                                             type === currentType &&
                                             vendor === currentVendor &&
                                             label === currentFilename;

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 3001;
+const MAX_BODY_SIZE = 10 * 1024 * 1024; // 10 MB limit
 
 // Base paths for data
 const DATA_DIR = path.join(__dirname, 'src', 'data');
@@ -45,7 +46,16 @@ const server = http.createServer(async (req, res) => {
     const getBody = (req) => {
         return new Promise((resolve, reject) => {
             let body = '';
-            req.on('data', chunk => body += chunk);
+            let size = 0;
+            req.on('data', chunk => {
+                size += chunk.length;
+                if (size > MAX_BODY_SIZE) {
+                    req.destroy();
+                    reject(new Error('Request body too large'));
+                    return;
+                }
+                body += chunk;
+            });
             req.on('end', () => {
                 try {
                     resolve(JSON.parse(body));
@@ -221,36 +231,34 @@ const server = http.createServer(async (req, res) => {
                 const inventory = {};
                 const directions = ['Inbound', 'Outbound'];
 
-                for (const direction of directions) {
+                // Read both direction folders in parallel
+                await Promise.all(directions.map(async (direction) => {
                     const dirPath = path.join(MESSAGES_DIR, direction);
                     inventory[direction] = {};
 
-                    // Ensure direction folder exists
                     await fs.mkdir(dirPath, { recursive: true }).catch(() => { });
 
                     const types = await fs.readdir(dirPath, { withFileTypes: true }).catch(() => []);
-                    for (const typeEnt of types) {
-                        if (typeEnt.isDirectory()) {
-                            const typeName = typeEnt.name;
-                            const typePath = path.join(dirPath, typeName);
-                            inventory[direction][typeName] = {};
+                    // Read all type folders in parallel
+                    await Promise.all(types.filter(t => t.isDirectory()).map(async (typeEnt) => {
+                        const typeName = typeEnt.name;
+                        const typePath = path.join(dirPath, typeName);
+                        inventory[direction][typeName] = {};
 
-                            const vendors = await fs.readdir(typePath, { withFileTypes: true }).catch(() => []);
-                            for (const vendorEnt of vendors) {
-                                if (vendorEnt.isDirectory()) {
-                                    const vendorName = vendorEnt.name;
-                                    const vendorPath = path.join(typePath, vendorName);
+                        const vendors = await fs.readdir(typePath, { withFileTypes: true }).catch(() => []);
+                        // Read all vendor folders in parallel
+                        await Promise.all(vendors.filter(v => v.isDirectory()).map(async (vendorEnt) => {
+                            const vendorName = vendorEnt.name;
+                            const vendorPath = path.join(typePath, vendorName);
 
-                                    const files = await fs.readdir(vendorPath);
-                                    inventory[direction][typeName][vendorName] = files
-                                        .filter(f => f.endsWith('.hl7'))
-                                        .map(f => f.replace('.hl7', ''))
-                                        .sort();
-                                }
-                            }
-                        }
-                    }
-                }
+                            const files = await fs.readdir(vendorPath);
+                            inventory[direction][typeName][vendorName] = files
+                                .filter(f => f.endsWith('.hl7'))
+                                .map(f => f.replace('.hl7', ''))
+                                .sort();
+                        }));
+                    }));
+                }));
 
                 return sendJSON({ success: true, inventory, serverVersion: '2026-02-25.03 (HierarchFix)' });
             } catch (err) {
