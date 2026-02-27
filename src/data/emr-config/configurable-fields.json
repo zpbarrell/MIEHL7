@@ -107,11 +107,74 @@
       "notes": ""
     },
     {
-      "fieldPosition": "MSH.7",
-      "fieldName": "Date/Time of Message",
+      "fieldPosition": "IN1.47",
+      "fieldName": "Coverage Type",
       "emrLocation": "",
       "imagePaths": [],
       "notes": ""
+    },
+    {
+      "fieldPosition": "PID.2",
+      "fieldName": "Patient ID (External)",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": ""
+    },
+    {
+      "fieldPosition": "PID.5",
+      "fieldName": "Patient Name",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": ""
+    },
+    {
+      "fieldPosition": "PID.7",
+      "fieldName": "Date/Time of Birth",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": ""
+    },
+    {
+      "fieldPosition": "PID.8",
+      "fieldName": "Administrative Sex",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": ""
+    },
+    {
+      "fieldPosition": "PID.10",
+      "fieldName": "Race",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": ""
+    },
+    {
+      "fieldPosition": "PID.11",
+      "fieldName": "Patient Address",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": ""
+    },
+    {
+      "fieldPosition": "PID.12",
+      "fieldName": "County Code",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": ""
+    },
+    {
+      "fieldPosition": "PID.13",
+      "fieldName": "Phone Number - Home",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": ""
+    },
+    {
+      "fieldPosition": "PV1.3",
+      "fieldName": "PV1.3",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "RTSE"
     }
   ]
 }

@@ -1,146 +1,24 @@
-{
-    "segment": "DG1",
-    "name": "Diagnosis",
-    "description": "The DG1 segment is used to transmit diagnosis information.",
-    "fields": [
-        {
-            "field": 1,
-            "name": "Set ID - DG1",
-            "dataType": "SI",
-            "description": "Sequence number for DG1 segments.",
-            "maxLength": 4,
-            "required": true
-        },
-        {
-            "field": 2,
-            "name": "Diagnosis Coding Method",
-            "dataType": "ID",
-            "description": "Coding method used for the diagnosis (deprecated).",
-            "maxLength": 2
-        },
-        {
-            "field": 3,
-            "name": "Diagnosis Code - DG1",
-            "dataType": "CE",
-            "description": "Diagnosis code (ICD-9, ICD-10, etc.).",
-            "components": [
-                {
-                    "position": 1,
-                    "name": "Identifier",
-                    "dataType": "ST"
-                },
-                {
-                    "position": 2,
-                    "name": "Text",
-                    "dataType": "ST"
-                },
-                {
-                    "position": 3,
-                    "name": "Coding System",
-                    "dataType": "ID"
-                },
-                {
-                    "position": 4,
-                    "name": "Alternate Identifier",
-                    "dataType": "ST"
-                },
-                {
-                    "position": 5,
-                    "name": "Alternate Text",
-                    "dataType": "ST"
-                },
-                {
-                    "position": 6,
-                    "name": "Alternate Coding System",
-                    "dataType": "ID"
+                    {
+                  "segment": "DG1",
+                  "name": "Diagnosis",
+                  "description": "The DG1 segment is used to transmit diagnosis information.",
+                  "fields": [
+                    { "field": 1, "name": "Set ID - DG1", "dataType": "SI", "description": "Sequence number for DG1 segments.", "required": true },
+                    { "field": 2, "name": "Diagnosis Coding Method", "dataType": "ID", "description": "Coding method used for the diagnosis.", "required": true },
+                    { "field": 3, "name": "Diagnosis Code", "dataType": "ID", "description": "Diagnosis code." },
+                    { "field": 4, "name": "Diagnosis Description", "dataType": "ST", "description": "Description of the diagnosis." },
+                    { "field": 5, "name": "Diagnosis Date/Time", "dataType": "TS", "description": "Date/time of the diagnosis." },
+                    { "field": 6, "name": "Diagnosis/DRG Type", "dataType": "ID", "description": "Diagnosis/DRG type.", "required": true },
+                    { "field": 7, "name": "Major Diagnostic Category", "dataType": "ST", "description": "Major diagnostic category." },
+                    { "field": 8, "name": "Diagnostic Related Group", "dataType": "ID", "description": "Diagnostic related group." },
+                    { "field": 9, "name": "DRG Approval Indicator", "dataType": "ID", "description": "DRG approval indicator." },
+                    { "field": 10, "name": "DRG Grouper Review Code", "dataType": "ID", "description": "DRG grouper review code." },
+                    { "field": 11, "name": "Outlier Type", "dataType": "ID", "description": "Outlier type." },
+                    { "field": 12, "name": "Outlier Days", "dataType": "NM", "description": "Outlier days." },
+                    { "field": 13, "name": "Outlier Cost", "dataType": "NM", "description": "Outlier cost." },
+                    { "field": 14, "name": "Grouper Version and Type", "dataType": "ST", "description": "Grouper version and type." },
+                    { "field": 15, "name": "Diagnosis/DRG Priority", "dataType": "NM", "description": "Diagnosis/DRG priority." },
+                    { "field": 16, "name": "Diagnosing Clinician", "dataType": "TX", "description": "Diagnosing clinician." }
+                  ]
                 }
-            ]
-        },
-        {
-            "field": 4,
-            "name": "Diagnosis Description",
-            "dataType": "ST",
-            "description": "Text description of the diagnosis (deprecated, use DG1.3).",
-            "maxLength": 40
-        },
-        {
-            "field": 5,
-            "name": "Diagnosis Date/Time",
-            "dataType": "TS",
-            "description": "Date/time when the diagnosis was determined."
-        },
-        {
-            "field": 6,
-            "name": "Diagnosis Type",
-            "dataType": "IS",
-            "description": "Type of diagnosis (A=Admitting, W=Working, F=Final).",
-            "maxLength": 2,
-            "required": true
-        },
-        {
-            "field": 7,
-            "name": "Major Diagnostic Category",
-            "dataType": "CE",
-            "description": "Major diagnostic category."
-        },
-        {
-            "field": 8,
-            "name": "Diagnostic Related Group",
-            "dataType": "CE",
-            "description": "DRG for the diagnosis."
-        },
-        {
-            "field": 9,
-            "name": "DRG Approval Indicator",
-            "dataType": "ID",
-            "description": "Whether the DRG has been approved.",
-            "maxLength": 1
-        },
-        {
-            "field": 10,
-            "name": "DRG Grouper Review Code",
-            "dataType": "IS",
-            "description": "DRG grouper review code.",
-            "maxLength": 2
-        },
-        {
-            "field": 11,
-            "name": "Outlier Type",
-            "dataType": "CE",
-            "description": "Type of outlier (cost or day)."
-        },
-        {
-            "field": 12,
-            "name": "Outlier Days",
-            "dataType": "NM",
-            "description": "Number of outlier days.",
-            "maxLength": 3
-        },
-        {
-            "field": 13,
-            "name": "Outlier Cost",
-            "dataType": "CP",
-            "description": "Amount of outlier cost."
-        },
-        {
-            "field": 14,
-            "name": "Grouper Version and Type",
-            "dataType": "ST",
-            "description": "Version and type of DRG grouper.",
-            "maxLength": 4
-        },
-        {
-            "field": 15,
-            "name": "Diagnosis Priority",
-            "dataType": "ID",
-            "description": "Ranking of the diagnosis (1=Primary, 2+=Secondary).",
-            "maxLength": 2
-        },
-        {
-            "field": 16,
-            "name": "Diagnosing Clinician",
-            "dataType": "XCN",
-            "description": "Clinician who made the diagnosis."
-        }
-    ]
-}
+            

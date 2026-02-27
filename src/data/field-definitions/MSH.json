@@ -2,269 +2,40 @@
   "segment": "MSH",
   "name": "Message Header",
   "description": "The MSH segment defines the intent, source, destination, and some specifics of the syntax of a message.",
-  "fields": [
-    {
-      "field": 1,
-      "name": "Field Separator",
-      "dataType": "ST",
-      "description": "Defines the character used as field separator for the rest of the message. Always '|'.",
-      "maxLength": 1,
-      "required": true
-    },
-    {
-      "field": 2,
-      "name": "Encoding Characters",
-      "dataType": "ST",
-      "description": "The four encoding characters used in the message: component (^), repetition (~), escape (\\), and subcomponent (&).",
-      "maxLength": 4,
-      "required": true
-    },
-    {
-      "field": 3,
-      "name": "Sending Application",
-      "dataType": "HD",
-      "description": "Identifies the sending application among all other applications within the network enterprise.",
-      "maxLength": 227,
-      "components": [
-        {
-          "position": 1,
-          "name": "Namespace ID",
-          "dataType": "IS"
-        },
-        {
-          "position": 2,
-          "name": "Universal ID",
-          "dataType": "ST"
-        },
-        {
-          "position": 3,
-          "name": "Universal ID Type",
-          "dataType": "ID"
-        }
-      ]
-    },
-    {
-      "field": 4,
-      "name": "Sending Facility",
-      "dataType": "HD",
-      "description": "Identifies the sending facility (hospital, clinic, lab, etc.).",
-      "maxLength": 227,
-      "components": [
-        {
-          "position": 1,
-          "name": "Namespace ID",
-          "dataType": "IS"
-        },
-        {
-          "position": 2,
-          "name": "Universal ID",
-          "dataType": "ST"
-        },
-        {
-          "position": 3,
-          "name": "Universal ID Type",
-          "dataType": "ID"
-        }
-      ]
-    },
-    {
-      "field": 5,
-      "name": "Receiving Application",
-      "dataType": "HD",
-      "description": "Identifies the receiving application among all applications within the network enterprise.",
-      "maxLength": 227,
-      "components": [
-        {
-          "position": 1,
-          "name": "Namespace ID",
-          "dataType": "IS"
-        },
-        {
-          "position": 2,
-          "name": "Universal ID",
-          "dataType": "ST"
-        },
-        {
-          "position": 3,
-          "name": "Universal ID Type",
-          "dataType": "ID"
-        }
-      ]
-    },
-    {
-      "field": 6,
-      "name": "Receiving Facility",
-      "dataType": "HD",
-      "description": "Identifies the receiving facility (hospital, clinic, lab, etc.).",
-      "maxLength": 227,
-      "components": [
-        {
-          "position": 1,
-          "name": "Namespace ID",
-          "dataType": "IS"
-        },
-        {
-          "position": 2,
-          "name": "Universal ID",
-          "dataType": "ST"
-        },
-        {
-          "position": 3,
-          "name": "Universal ID Type",
-          "dataType": "ID"
-        }
-      ]
-    },
-    {
-      "field": 7,
-      "name": "Date/Time of Message",
-      "dataType": "TS",
-      "description": "Date and time that the sending system created the message.",
-      "maxLength": 26,
-      "required": true
-    },
-    {
-      "field": 8,
-      "name": "Security",
-      "dataType": "ST",
-      "description": "Used to implement security features.",
-      "maxLength": 40
-    },
-    {
-      "field": 9,
-      "name": "Message Type",
-      "dataType": "MSG",
-      "description": "The message type, trigger event, and message structure.",
-      "required": true,
-      "components": [
-        {
-          "position": 1,
-          "name": "Message Code",
-          "dataType": "ID"
-        },
-        {
-          "position": 2,
-          "name": "Trigger Event",
-          "dataType": "ID"
-        },
-        {
-          "position": 3,
-          "name": "Message Structure",
-          "dataType": "ID"
-        }
-      ]
-    },
-    {
-      "field": 10,
-      "name": "Message Control ID",
-      "dataType": "ST",
-      "description": "Unique message identifier used for acknowledgment.",
-      "maxLength": 20,
-      "required": true
-    },
-    {
-      "field": 11,
-      "name": "Processing ID",
-      "dataType": "PT",
-      "description": "Indicates whether the message is part of a production, training, or debugging system.",
-      "required": true,
-      "components": [
-        {
-          "position": 1,
-          "name": "Processing ID",
-          "dataType": "ID"
-        },
-        {
-          "position": 2,
-          "name": "Processing Mode",
-          "dataType": "ID"
-        }
-      ]
-    },
-    {
-      "field": 12,
-      "name": "Version ID",
-      "dataType": "VID",
-      "description": "The HL7 version used for encoding the message.",
-      "required": true,
-      "components": [
-        {
-          "position": 1,
-          "name": "Version ID",
-          "dataType": "ID"
-        },
-        {
-          "position": 2,
-          "name": "Internationalization Code",
-          "dataType": "CE"
-        },
-        {
-          "position": 3,
-          "name": "International Version ID",
-          "dataType": "CE"
-        }
-      ]
-    },
-    {
-      "field": 13,
-      "name": "Sequence Number",
-      "dataType": "NM",
-      "description": "A non-null value in this field implies that the sequence number protocol is in use.",
-      "maxLength": 15
-    },
-    {
-      "field": 14,
-      "name": "Continuation Pointer",
-      "dataType": "ST",
-      "description": "Used to define continuations in application-specific ways.",
-      "maxLength": 180
-    },
-    {
-      "field": 15,
-      "name": "Accept Acknowledgment Type",
-      "dataType": "ID",
-      "description": "Defines the conditions under which accept acknowledgments are required.",
-      "maxLength": 2
-    },
-    {
-      "field": 16,
-      "name": "Application Acknowledgment Type",
-      "dataType": "ID",
-      "description": "Defines the conditions under which application acknowledgments are required.",
-      "maxLength": 2
-    },
-    {
-      "field": 17,
-      "name": "Country Code",
-      "dataType": "ID",
-      "description": "The country of origin for the message.",
-      "maxLength": 3
-    },
-    {
-      "field": 18,
-      "name": "Character Set",
-      "dataType": "ID",
-      "description": "The character set(s) used in the message.",
-      "maxLength": 16
-    },
-    {
-      "field": 19,
-      "name": "Principal Language of Message",
-      "dataType": "CE",
-      "description": "The principal language of the message."
-    },
-    {
-      "field": 20,
-      "name": "Alternate Character Set Handling Scheme",
-      "dataType": "ID",
-      "description": "Specifies an alternate character set handling scheme.",
-      "maxLength": 20
-    },
-    {
-      "field": 21,
-      "name": "Message Profile Identifier",
-      "dataType": "EI",
-      "description": "Sites may use this field to assert adherence to a message profile."
-    }
+  "fields": [    { "field": 1, "name": "Field Separator", "dataType": "ST", "description": "Field separator character.", "required": true },
+    { "field": 2, "name": "Encoding Characters", "dataType": "ST", "description": "Encoding characters.", "required": true },
+    { "field": 3, "name": "Sending Application", "dataType": "HD", "description": "Sending application.", "components": [
+      { "position": 1, "name": "Namespace ID", "dataType": "IS" },
+      { "position": 2, "name": "Universal ID", "dataType": "ST" },
+      { "position": 3, "name": "Universal ID Type", "dataType": "ID" }
+    ] },
+    { "field": 4, "name": "Sending Facility", "dataType": "HD", "description": "Sending facility.", "components": [
+      { "position": 1, "name": "Namespace ID", "dataType": "IS" },
+      { "position": 2, "name": "Universal ID", "dataType": "ST" },
+      { "position": 3, "name": "Universal ID Type", "dataType": "ID" }
+    ] },
+    { "field": 5, "name": "Receiving Application", "dataType": "HD", "description": "Receiving application.", "components": [
+      { "position": 1, "name": "Namespace ID", "dataType": "IS" },
+      { "position": 2, "name": "Universal ID", "dataType": "ST" },
+      { "position": 3, "name": "Universal ID Type", "dataType": "ID" }
+    ] },
+    { "field": 6, "name": "Receiving Facility", "dataType": "HD", "description": "Receiving facility.", "components": [
+      { "position": 1, "name": "Namespace ID", "dataType": "IS" },
+      { "position": 2, "name": "Universal ID", "dataType": "ST" },
+      { "position": 3, "name": "Universal ID Type", "dataType": "ID" }
+    ] },
+    { "field": 7, "name": "Date/Time of Message", "dataType": "TS", "description": "Date/time of message." },
+    { "field": 8, "name": "Security", "dataType": "ST", "description": "Security." },
+    { "field": 9, "name": "Message Type", "dataType": "ID", "description": "Message type.", "required": true },
+    { "field": 10, "name": "Message Control ID", "dataType": "ST", "description": "Message control ID.", "required": true },
+    { "field": 11, "name": "Processing ID", "dataType": "ID", "description": "Processing ID.", "required": true },
+    { "field": 12, "name": "Version ID", "dataType": "NM", "description": "Version ID.", "required": true },
+    { "field": 13, "name": "Sequence Number", "dataType": "NM", "description": "Sequence number." },
+    { "field": 14, "name": "Continuation Pointer", "dataType": "ST", "description": "Continuation pointer." },
+    { "field": 15, "name": "Accept Acknowledgment Type", "dataType": "ID", "description": "Accept acknowledgment type." },
+    { "field": 16, "name": "Application Acknowledgment Type", "dataType": "ID", "description": "Application acknowledgment type." },
+    { "field": 17, "name": "Country Code", "dataType": "ID", "description": "Country code." },
+    { "field": 18, "name": "Character Set", "dataType": "ID", "description": "Character set." }
   ]
 }
+      

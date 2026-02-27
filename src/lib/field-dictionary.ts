@@ -9,6 +9,8 @@ import OBX_JSON from '../data/field-definitions/OBX.json';
 import AL1_JSON from '../data/field-definitions/AL1.json';
 import DG1_JSON from '../data/field-definitions/DG1.json';
 import IN1_JSON from '../data/field-definitions/IN1.json';
+import PV1_JSON from '../data/field-definitions/PV1.json';
+import NTE_JSON from '../data/field-definitions/NTE.json';
 
 // Import EMR config (Base defaults)
 import emrConfig_JSON from '../data/emr-config/configurable-fields.json';
@@ -18,7 +20,18 @@ const segmentMap = new Map<string, SegmentDefinitions>();
 const emrConfigMap = new Map<string, EmrConfigEntry>();
 
 // Initialize with bundled defaults
-const allSegments: SegmentDefinitions[] = [MSH_JSON, PID_JSON, ORC_JSON, OBR_JSON, OBX_JSON, AL1_JSON, DG1_JSON, IN1_JSON];
+const allSegments: SegmentDefinitions[] = [
+    MSH_JSON,
+    PID_JSON,
+    ORC_JSON,
+    OBR_JSON,
+    OBX_JSON,
+    AL1_JSON,
+    DG1_JSON,
+    IN1_JSON,
+    PV1_JSON,
+    NTE_JSON
+];
 allSegments.forEach(seg => {
     segmentMap.set(seg.segment, seg as SegmentDefinitions);
 });

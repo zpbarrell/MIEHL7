@@ -1,0 +1,10 @@
+{
+  "segment": "NTE",
+  "name": "Notes and Comments",
+  "description": "The NTE segment is used to send notes and comments related to other segments.",
+  "fields": [
+    { "field": 1, "name": "Set ID - NTE", "dataType": "SI", "description": "Sequence number for NTE segment." },
+    { "field": 2, "name": "Source of Comment", "dataType": "ID", "description": "Origin of the comment." },
+    { "field": 3, "name": "Comment", "dataType": "FT", "description": "The actual comment text." }
+  ]
+}

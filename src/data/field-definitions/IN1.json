@@ -1,371 +1,57 @@
 {
-    "segment": "IN1",
-    "name": "Insurance",
-    "description": "The IN1 segment is used to transmit insurance policy information.",
-    "fields": [
-        {
-            "field": 1,
-            "name": "Set ID - IN1",
-            "dataType": "SI",
-            "description": "Sequence number for IN1 segments.",
-            "maxLength": 4,
-            "required": true
-        },
-        {
-            "field": 2,
-            "name": "Insurance Plan ID",
-            "dataType": "CE",
-            "description": "Unique identifier for the insurance plan.",
-            "required": true,
-            "components": [
-                {
-                    "position": 1,
-                    "name": "Identifier",
-                    "dataType": "ST"
-                },
-                {
-                    "position": 2,
-                    "name": "Text",
-                    "dataType": "ST"
-                },
-                {
-                    "position": 3,
-                    "name": "Coding System",
-                    "dataType": "ID"
-                }
-            ]
-        },
-        {
-            "field": 3,
-            "name": "Insurance Company ID",
-            "dataType": "CX",
-            "description": "Identifier of the insurance company.",
-            "required": true,
-            "components": [
-                {
-                    "position": 1,
-                    "name": "ID Number",
-                    "dataType": "ST"
-                },
-                {
-                    "position": 2,
-                    "name": "Check Digit",
-                    "dataType": "ST"
-                },
-                {
-                    "position": 3,
-                    "name": "Check Digit Scheme",
-                    "dataType": "ID"
-                },
-                {
-                    "position": 4,
-                    "name": "Assigning Authority",
-                    "dataType": "HD"
-                }
-            ]
-        },
-        {
-            "field": 4,
-            "name": "Insurance Company Name",
-            "dataType": "XON",
-            "description": "Name of the insurance company."
-        },
-        {
-            "field": 5,
-            "name": "Insurance Company Address",
-            "dataType": "XAD",
-            "description": "Address of the insurance company."
-        },
-        {
-            "field": 6,
-            "name": "Insurance Co Contact Person",
-            "dataType": "XPN",
-            "description": "Contact person at the insurance company."
-        },
-        {
-            "field": 7,
-            "name": "Insurance Co Phone Number",
-            "dataType": "XTN",
-            "description": "Phone number of the insurance company."
-        },
-        {
-            "field": 8,
-            "name": "Group Number",
-            "dataType": "ST",
-            "description": "Group number for the insurance plan.",
-            "maxLength": 12
-        },
-        {
-            "field": 9,
-            "name": "Group Name",
-            "dataType": "XON",
-            "description": "Group name for the insurance plan."
-        },
-        {
-            "field": 10,
-            "name": "Insured's Group Emp ID",
-            "dataType": "CX",
-            "description": "Group employer ID for the insured."
-        },
-        {
-            "field": 11,
-            "name": "Insured's Group Emp Name",
-            "dataType": "XON",
-            "description": "Group employer name for the insured."
-        },
-        {
-            "field": 12,
-            "name": "Plan Effective Date",
-            "dataType": "DT",
-            "description": "Date the insurance plan became effective.",
-            "maxLength": 8
-        },
-        {
-            "field": 13,
-            "name": "Plan Expiration Date",
-            "dataType": "DT",
-            "description": "Date the insurance plan expires.",
-            "maxLength": 8
-        },
-        {
-            "field": 14,
-            "name": "Authorization Information",
-            "dataType": "AUI",
-            "description": "Authorization information for the plan."
-        },
-        {
-            "field": 15,
-            "name": "Plan Type",
-            "dataType": "IS",
-            "description": "Type of plan (e.g., HMO, PPO, POS).",
-            "maxLength": 3
-        },
-        {
-            "field": 16,
-            "name": "Name of Insured",
-            "dataType": "XPN",
-            "description": "Name of the insured person.",
-            "components": [
-                {
-                    "position": 1,
-                    "name": "Family Name",
-                    "dataType": "FN"
-                },
-                {
-                    "position": 2,
-                    "name": "Given Name",
-                    "dataType": "ST"
-                },
-                {
-                    "position": 3,
-                    "name": "Second/Middle Name",
-                    "dataType": "ST"
-                }
-            ]
-        },
-        {
-            "field": 17,
-            "name": "Insured's Relationship to Patient",
-            "dataType": "CE",
-            "description": "Relationship of the insured to the patient."
-        },
-        {
-            "field": 18,
-            "name": "Insured's Date of Birth",
-            "dataType": "TS",
-            "description": "Date of birth of the insured."
-        },
-        {
-            "field": 19,
-            "name": "Insured's Address",
-            "dataType": "XAD",
-            "description": "Address of the insured."
-        },
-        {
-            "field": 20,
-            "name": "Assignment of Benefits",
-            "dataType": "IS",
-            "description": "Whether benefits have been assigned.",
-            "maxLength": 2
-        },
-        {
-            "field": 21,
-            "name": "Coordination of Benefits",
-            "dataType": "IS",
-            "description": "Priority of this insurance for coordination of benefits.",
-            "maxLength": 2
-        },
-        {
-            "field": 22,
-            "name": "Coord of Ben. Priority",
-            "dataType": "ST",
-            "description": "Priority sequence for coordination of benefits.",
-            "maxLength": 2
-        },
-        {
-            "field": 23,
-            "name": "Notice of Admission Flag",
-            "dataType": "ID",
-            "description": "Whether a notice of admission was sent.",
-            "maxLength": 1
-        },
-        {
-            "field": 24,
-            "name": "Notice of Admission Date",
-            "dataType": "DT",
-            "description": "Date admission notice was sent."
-        },
-        {
-            "field": 25,
-            "name": "Report of Eligibility Flag",
-            "dataType": "ID",
-            "description": "Whether a report of eligibility was sent.",
-            "maxLength": 1
-        },
-        {
-            "field": 26,
-            "name": "Report of Eligibility Date",
-            "dataType": "DT",
-            "description": "Date eligibility report was sent."
-        },
-        {
-            "field": 27,
-            "name": "Release Information Code",
-            "dataType": "IS",
-            "description": "Code for release of information.",
-            "maxLength": 2
-        },
-        {
-            "field": 28,
-            "name": "Pre-Admit Cert (PAC)",
-            "dataType": "ST",
-            "description": "Pre-admission certification number.",
-            "maxLength": 15
-        },
-        {
-            "field": 29,
-            "name": "Verification Date/Time",
-            "dataType": "TS",
-            "description": "Date/time insurance was verified."
-        },
-        {
-            "field": 30,
-            "name": "Verification By",
-            "dataType": "XCN",
-            "description": "Person who verified the insurance."
-        },
-        {
-            "field": 31,
-            "name": "Type of Agreement Code",
-            "dataType": "IS",
-            "description": "Type of agreement with the insurance company.",
-            "maxLength": 2
-        },
-        {
-            "field": 32,
-            "name": "Billing Status",
-            "dataType": "IS",
-            "description": "Billing status of the claim.",
-            "maxLength": 2
-        },
-        {
-            "field": 33,
-            "name": "Lifetime Reserve Days",
-            "dataType": "NM",
-            "description": "Number of lifetime reserve days.",
-            "maxLength": 4
-        },
-        {
-            "field": 34,
-            "name": "Delay Before L.R. Day",
-            "dataType": "NM",
-            "description": "Delay before lifetime reserve days.",
-            "maxLength": 4
-        },
-        {
-            "field": 35,
-            "name": "Company Plan Code",
-            "dataType": "IS",
-            "description": "Code for the company's plan.",
-            "maxLength": 8
-        },
-        {
-            "field": 36,
-            "name": "Policy Number",
-            "dataType": "ST",
-            "description": "Individual policy number.",
-            "maxLength": 15
-        },
-        {
-            "field": 37,
-            "name": "Policy Deductible",
-            "dataType": "CP",
-            "description": "Amount of the policy deductible."
-        },
-        {
-            "field": 38,
-            "name": "Policy Limit - Amount",
-            "dataType": "CP",
-            "description": "Maximum policy amount."
-        },
-        {
-            "field": 39,
-            "name": "Policy Limit - Days",
-            "dataType": "NM",
-            "description": "Maximum number of days covered.",
-            "maxLength": 4
-        },
-        {
-            "field": 40,
-            "name": "Room Rate - Semi-Private",
-            "dataType": "CP",
-            "description": "Semi-private room rate."
-        },
-        {
-            "field": 41,
-            "name": "Room Rate - Private",
-            "dataType": "CP",
-            "description": "Private room rate."
-        },
-        {
-            "field": 42,
-            "name": "Insured's Employment Status",
-            "dataType": "CE",
-            "description": "Employment status of the insured."
-        },
-        {
-            "field": 43,
-            "name": "Insured's Administrative Sex",
-            "dataType": "IS",
-            "description": "Administrative sex of the insured.",
-            "maxLength": 1
-        },
-        {
-            "field": 44,
-            "name": "Insured's Employer's Address",
-            "dataType": "XAD",
-            "description": "Address of the insured's employer."
-        },
-        {
-            "field": 45,
-            "name": "Verification Status",
-            "dataType": "ST",
-            "description": "Status of insurance verification.",
-            "maxLength": 2
-        },
-        {
-            "field": 46,
-            "name": "Prior Insurance Plan ID",
-            "dataType": "IS",
-            "description": "ID of the prior insurance plan.",
-            "maxLength": 8
-        },
-        {
-            "field": 47,
-            "name": "Coverage Type",
-            "dataType": "IS",
-            "description": "Type of coverage (e.g., medical, dental).",
-            "maxLength": 3
-        }
-    ]
+  "segment": "IN1",
+  "name": "Insurance",
+  "description": "The IN1 segment is used to transmit insurance policy information.",
+  "fields": [
+    { "field": 1, "name": "Set ID - IN1", "dataType": "SI", "description": "Sequence number for IN1 segments.", "required": true },
+    { "field": 2, "name": "Insurance Plan ID", "dataType": "ID", "description": "Unique identifier for the insurance plan.", "required": true },
+    { "field": 3, "name": "Insurance Company ID", "dataType": "ST", "description": "Identifier of the insurance company.", "required": true },
+    { "field": 4, "name": "Insurance Company Name", "dataType": "ST", "description": "Name of the insurance company." },
+    { "field": 5, "name": "Insurance Company Address", "dataType": "AD", "description": "Address of the insurance company." },
+    { "field": 6, "name": "Insurance Co Contact Person", "dataType": "PN", "description": "Contact person at the insurance company." },
+    { "field": 7, "name": "Insurance Co Phone Number", "dataType": "TN", "description": "Phone number of the insurance company." },
+    { "field": 8, "name": "Group Number", "dataType": "ST", "description": "Group number." },
+    { "field": 9, "name": "Group Name", "dataType": "ST", "description": "Group name." },
+    { "field": 10, "name": "Insured's Group Emp. ID", "dataType": "ST", "description": "Insured's group employer ID." },
+    { "field": 11, "name": "Insured's Group Emp. Name", "dataType": "ST", "description": "Insured's group employer name." },
+    { "field": 12, "name": "Plan Effective Date", "dataType": "DT", "description": "Effective date of the insurance plan." },
+    { "field": 13, "name": "Plan Expiration Date", "dataType": "DT", "description": "Expiration date of the insurance plan." },
+    { "field": 14, "name": "Authorization Information", "dataType": "ST", "description": "Authorization information." },
+    { "field": 15, "name": "Plan Type", "dataType": "ID", "description": "Type of insurance plan." },
+    { "field": 16, "name": "Name of Insured", "dataType": "PN", "description": "Name of the insured." },
+    { "field": 17, "name": "Insured's Relation to Pat", "dataType": "ID", "description": "Insured's relationship to patient." },
+    { "field": 18, "name": "Insured's Date of Birth", "dataType": "DT", "description": "Date of birth of the insured." },
+    { "field": 19, "name": "Insured's Address", "dataType": "AD", "description": "Address of the insured." },
+    { "field": 20, "name": "Assignment of Benefits", "dataType": "ID", "description": "Assignment of benefits." },
+    { "field": 21, "name": "Coordination of Benefits", "dataType": "ID", "description": "Coordination of benefits." },
+    { "field": 22, "name": "Coord. of Ben. Priority", "dataType": "ST", "description": "Coordination of benefits priority." },
+    { "field": 23, "name": "Notice of Admission Code", "dataType": "ID", "description": "Notice of admission code." },
+    { "field": 24, "name": "Notice of Admission Date", "dataType": "DT", "description": "Notice of admission date." },
+    { "field": 25, "name": "Rpt of Eligibility Code", "dataType": "ID", "description": "Report of eligibility code." },
+    { "field": 26, "name": "Rpt of Eligibility Date", "dataType": "DT", "description": "Report of eligibility date." },
+    { "field": 27, "name": "Release Information Code", "dataType": "ID", "description": "Release information code." },
+    { "field": 28, "name": "Pre-Admit Cert. (PAC)", "dataType": "ST", "description": "Pre-admit certification." },
+    { "field": 29, "name": "Verification Date", "dataType": "DT", "description": "Verification date." },
+    { "field": 30, "name": "Verification By", "dataType": "ST", "description": "Verified by." },
+    { "field": 31, "name": "Type of Agreement Code", "dataType": "ID", "description": "Type of agreement code." },
+    { "field": 32, "name": "Billing Status", "dataType": "ID", "description": "Billing status." },
+    { "field": 33, "name": "Lifetime Reserve Days", "dataType": "NM", "description": "Lifetime reserve days." },
+    { "field": 34, "name": "Delay Before L. R. Day", "dataType": "NM", "description": "Delay before lifetime reserve day." },
+    { "field": 35, "name": "Company Plan Code", "dataType": "ST", "description": "Company plan code." },
+    { "field": 36, "name": "Policy Number", "dataType": "ST", "description": "Policy number." },
+    { "field": 37, "name": "Policy Deductible", "dataType": "NM", "description": "Policy deductible." },
+    { "field": 38, "name": "Policy Limit - Amount", "dataType": "NM", "description": "Policy limit amount." },
+    { "field": 39, "name": "Policy Limit - Days", "dataType": "NM", "description": "Policy limit days." },
+    { "field": 40, "name": "Room Rate - Semi-Private", "dataType": "NM", "description": "Room rate for semi-private." },
+    { "field": 41, "name": "Room Rate - Private", "dataType": "NM", "description": "Room rate for private." },
+    { "field": 42, "name": "Insured's Employ Status", "dataType": "ID", "description": "Insured's employment status." },
+    { "field": 43, "name": "Insured's Sex", "dataType": "ID", "description": "Insured's sex." },
+    { "field": 44, "name": "Insured's Employer Addr", "dataType": "AD", "description": "Insured's employer address." },
+    { "field": 45, "name": "Verification Status", "dataType": "ST", "description": "Verification status." },
+    { "field": 46, "name": "Prior Insurance Plan ID", "dataType": "ID", "description": "Prior insurance plan ID." },
+    { "field": 47, "name": "Coverage Type", "dataType": "ID", "description": "Coverage type." },
+    { "field": 48, "name": "Handicap", "dataType": "ID", "description": "Handicap." },
+    { "field": 49, "name": "Insured's ID Number", "dataType": "CX", "description": "Insured's ID number." }
+  ]
 }
+     
