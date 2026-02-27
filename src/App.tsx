@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import type { ParsedMessage } from './lib/types';
+import type { ParsedMessage, HL7Flow } from './lib/types';
 import { parseHL7Message } from './lib/hl7-parser';
 import { DropZone } from './components/DropZone';
 import { MessageSelector } from './components/MessageSelector';
@@ -10,8 +10,8 @@ import './App.css';
 type Inventory = Record<string, Record<string, Record<string, string[]>>>;
 
 /** Find the first available message in an inventory, preferring Inbound. */
-function findFirstMessage(inv: Inventory): { direction: string; type: string; vendor: string; filename: string } | null {
-  for (const d of ['Inbound', 'Outbound']) {
+function findFirstMessage(inv: Inventory): { direction: HL7Flow; type: string; vendor: string; filename: string } | null {
+  for (const d of ['Outbound', 'Inbound'] as HL7Flow[]) {
     if (!inv[d]) continue;
     const types = Object.keys(inv[d]);
     for (const type of types) {
@@ -27,7 +27,7 @@ function findFirstMessage(inv: Inventory): { direction: string; type: string; ve
 
 function App() {
   const [inventory, setInventory] = useState<Record<string, Record<string, Record<string, string[]>>>>({});
-  const [currentDirection, setCurrentDirection] = useState<string>('Inbound');
+  const [currentDirection, setCurrentDirection] = useState<HL7Flow>('Outbound');
   const [currentType, setCurrentType] = useState<string>('');
   const [currentVendor, setCurrentVendor] = useState<string>('Default');
   const [currentFilename, setCurrentFilename] = useState<string>('');
@@ -40,7 +40,7 @@ function App() {
     loadInventory();
   }, []);
 
-  const loadInventory = async (selectLatest?: { direction: string, type: string, vendor: string, filename: string }) => {
+  const loadInventory = async (selectLatest?: { direction: HL7Flow, type: string, vendor: string, filename: string }) => {
     try {
       const res = await fetch('/api/inventory');
       const data = await res.json();
@@ -70,7 +70,7 @@ function App() {
     }
   };
 
-  const loadMessage = async (direction: string, type: string, vendor: string, filename: string) => {
+  const loadMessage = async (direction: HL7Flow, type: string, vendor: string, filename: string) => {
     if (!direction || !type || !vendor || !filename) return;
     setIsLoading(true);
     try {
@@ -104,13 +104,14 @@ function App() {
 
   const handleModalSave = async (direction: string, vendor: string, type: string, label: string) => {
     if (!importingFile) return;
+    const normalizedDirection: HL7Flow = direction === 'Outbound' ? 'Outbound' : 'Inbound';
     setIsLoading(true);
     try {
       const res = await fetch('/api/save-message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          direction,
+          direction: normalizedDirection,
           vendor,
           type,
           label,
@@ -121,7 +122,7 @@ function App() {
       if (data.success) {
         setImportingFile(null);
         const safeLabel = label.trim().replace(/[^a-z0-9 _-]/gi, '') || `Imported ${new Date().toLocaleDateString().replace(/\//g, '-')}`;
-        await loadInventory({ direction, type, vendor, filename: safeLabel });
+        await loadInventory({ direction: normalizedDirection, type, vendor, filename: safeLabel });
       } else {
         alert(`Failed to save: ${data.message}`);
       }
@@ -133,7 +134,7 @@ function App() {
     }
   };
 
-  const handleSelectMessage = (direction: string, type: string, v: string, filename: string) => {
+  const handleSelectMessage = (direction: HL7Flow, type: string, v: string, filename: string) => {
     setCurrentDirection(direction);
     setCurrentType(type);
     setCurrentVendor(v);
@@ -141,7 +142,7 @@ function App() {
     loadMessage(direction, type, v, filename);
   };
 
-  const handleDirectionChange = (direction: string) => {
+  const handleDirectionChange = (direction: HL7Flow) => {
     setCurrentDirection(direction);
     // Auto-select first message in that direction if possible
     const dirInventory: Inventory = { [direction]: inventory[direction] || {} };
@@ -184,7 +185,7 @@ function App() {
               loadMessage(first.direction, first.type, first.vendor, first.filename);
             } else {
               setActiveMessage(null);
-              setCurrentDirection('Inbound');
+              setCurrentDirection('Outbound');
               setCurrentType('');
               setCurrentVendor('Default');
               setCurrentFilename('');
@@ -267,7 +268,7 @@ function App() {
 
       {/* HL7 Viewer */}
       {activeMessage ? (
-        <HL7Viewer message={activeMessage} />
+        <HL7Viewer message={activeMessage} flow={currentDirection} />
       ) : (
         <div className="app-welcome glass-card animate-fade-in-up">
           <div className="app-welcome__content">

@@ -1,4 +1,4 @@
-import type { FieldDefinition, ComponentDefinition, EmrConfigEntry, SegmentDefinitions } from './types';
+import type { FieldDefinition, ComponentDefinition, EmrConfigEntry, SegmentDefinitions, HL7Flow } from './types';
 
 // Import all segment definitions (Base defaults)
 import MSH_JSON from '../data/field-definitions/MSH.json';
@@ -19,6 +19,18 @@ import emrConfig_JSON from '../data/emr-config/configurable-fields.json';
 const segmentMap = new Map<string, SegmentDefinitions>();
 const emrConfigMap = new Map<string, EmrConfigEntry>();
 
+function normalizeFlow(flow?: HL7Flow): HL7Flow {
+    return flow === 'Inbound' ? 'Inbound' : 'Outbound';
+}
+
+function getEmrKey(position: string, flow?: HL7Flow): string {
+    return `${normalizeFlow(flow)}::${position}`;
+}
+
+function isEntryEnabled(entry?: EmrConfigEntry): boolean {
+    return !!entry && entry.enabled !== false;
+}
+
 // Initialize with bundled defaults
 const allSegments: SegmentDefinitions[] = [
     MSH_JSON,
@@ -37,7 +49,11 @@ allSegments.forEach(seg => {
 });
 
 emrConfig_JSON.entries.forEach(entry => {
-    emrConfigMap.set(entry.fieldPosition, entry as EmrConfigEntry);
+    const normalized = {
+        ...(entry as EmrConfigEntry),
+        flow: normalizeFlow((entry as EmrConfigEntry).flow)
+    };
+    emrConfigMap.set(getEmrKey(normalized.fieldPosition, normalized.flow), normalized);
 });
 
 /**
@@ -73,12 +89,15 @@ export function getComponentDefinition(
 /**
  * Check if a field position is EMR-configurable
  */
-export function isEmrConfigurable(position: string): boolean {
-    if (emrConfigMap.has(position)) return true;
+export function isEmrConfigurable(position: string, flow?: HL7Flow): boolean {
+    const resolvedFlow = normalizeFlow(flow);
+    const exact = emrConfigMap.get(getEmrKey(position, resolvedFlow));
+    if (isEntryEnabled(exact)) return true;
     const parts = position.split('.');
     if (parts.length === 3) {
         const parentPosition = `${parts[0]}.${parts[1]}`;
-        return emrConfigMap.has(parentPosition);
+        const parent = emrConfigMap.get(getEmrKey(parentPosition, resolvedFlow));
+        return isEntryEnabled(parent);
     }
     return false;
 }
@@ -86,13 +105,14 @@ export function isEmrConfigurable(position: string): boolean {
 /**
  * Get EMR configuration entry
  */
-export function getEmrConfig(position: string): EmrConfigEntry | undefined {
-    const exact = emrConfigMap.get(position);
+export function getEmrConfig(position: string, flow?: HL7Flow): EmrConfigEntry | undefined {
+    const resolvedFlow = normalizeFlow(flow);
+    const exact = emrConfigMap.get(getEmrKey(position, resolvedFlow));
     if (exact) return exact;
     const parts = position.split('.');
     if (parts.length === 3) {
         const parentPosition = `${parts[0]}.${parts[1]}`;
-        return emrConfigMap.get(parentPosition);
+        return emrConfigMap.get(getEmrKey(parentPosition, resolvedFlow));
     }
     return undefined;
 }
@@ -157,18 +177,23 @@ export async function saveFieldUpdate(segment: string, fieldIndex: number, name:
     }
 }
 
-export async function saveEmrUpdate(position: string, data: Partial<EmrConfigEntry>) {
+export async function saveEmrUpdate(position: string, flow: HL7Flow, data: Partial<EmrConfigEntry>) {
+    const resolvedFlow = normalizeFlow(flow);
     try {
         const res = await fetch('/api/update-emr', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ position, ...data })
+            body: JSON.stringify({ position, flow: resolvedFlow, ...data })
         });
         const result = await res.json();
 
         if (result.success && result.data) {
             // Update local memory map
-            emrConfigMap.set(position, result.data as EmrConfigEntry);
+            const entry = {
+                ...(result.data as EmrConfigEntry),
+                flow: normalizeFlow((result.data as EmrConfigEntry).flow || resolvedFlow)
+            };
+            emrConfigMap.set(getEmrKey(position, entry.flow), entry);
         }
         return result;
     } catch (err) {
@@ -177,18 +202,19 @@ export async function saveEmrUpdate(position: string, data: Partial<EmrConfigEnt
         return { success: false, error };
     }
 }
-export async function deleteEmrUpdate(position: string) {
+export async function deleteEmrUpdate(position: string, flow: HL7Flow) {
+    const resolvedFlow = normalizeFlow(flow);
     try {
         const res = await fetch('/api/delete-emr', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ position })
+            body: JSON.stringify({ position, flow: resolvedFlow })
         });
         const result = await res.json();
 
         if (result.success) {
             // Remove from local memory map
-            emrConfigMap.delete(position);
+            emrConfigMap.delete(getEmrKey(position, resolvedFlow));
         }
         return result;
     } catch (err) {

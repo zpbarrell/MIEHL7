@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import type { ParsedField } from '../lib/types';
+import type { ParsedField, HL7Flow } from '../lib/types';
 import { getFieldDefinition, getComponentDefinition, isEmrConfigurable, getEmrConfig, getSegmentDefinition, saveFieldUpdate, saveEmrUpdate } from '../lib/field-dictionary';
 import './FieldTooltip.css';
 
@@ -8,6 +8,7 @@ interface FieldTooltipProps {
     field: ParsedField;
     segmentName: string;
     fieldIndex: number;
+    flow: HL7Flow;
     anchorRect: DOMRect;
     isPinned: boolean;
     onClose: () => void;
@@ -24,6 +25,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
     field,
     segmentName,
     fieldIndex,
+    flow,
     anchorRect,
     onClose,
     isPinned = false
@@ -38,10 +40,10 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
     const fieldDef = getFieldDefinition(segmentName, fieldIndex);
     const segDef = getSegmentDefinition(segmentName);
 
-    const initialEmrConfig = getEmrConfig(field.position);
+    const initialEmrConfig = getEmrConfig(field.position, flow);
     const [localEmrConfig, setLocalEmrConfig] = useState(initialEmrConfig);
     const localEmrEnabled = !!localEmrConfig && localEmrConfig.enabled !== false;
-    const emrConfigurable = !!localEmrConfig || isEmrConfigurable(field.position);
+    const emrConfigurable = localEmrEnabled || isEmrConfigurable(field.position, flow);
 
     const [editFields, setEditFields] = useState<EditableFields & { imagePaths: string[] }>({
         name: fieldDef?.name || '',
@@ -232,7 +234,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
             if (localEmrConfig) {
                 // Toggle ON/OFF without deleting saved metadata
                 const targetPosition = localEmrConfig.fieldPosition || field.position;
-                const res = await saveEmrUpdate(targetPosition, {
+                const res = await saveEmrUpdate(targetPosition, flow, {
                     fieldName: localEmrConfig.fieldName || editFields.name || fieldDef?.name || field.position,
                     emrLocation: localEmrConfig.emrLocation || '',
                     notes: localEmrConfig.notes || '',
@@ -249,7 +251,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
                 }
             } else {
                 // Toggle ON
-                const res = await saveEmrUpdate(field.position, {
+                const res = await saveEmrUpdate(field.position, flow, {
                     fieldName: editFields.name || fieldDef?.name || field.position,
                     emrLocation: '',
                     notes: '',
@@ -287,7 +289,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
             const fieldRes = await saveFieldUpdate(segmentName, fieldIndex, editFields.name, editFields.description);
 
             // 2. Save EMR Config updates (including images)
-            const emrRes = await saveEmrUpdate(field.position, {
+            const emrRes = await saveEmrUpdate(field.position, flow, {
                 fieldName: editFields.name,
                 emrLocation: editFields.emrLocation,
                 notes: editFields.emrNotes,
@@ -480,7 +482,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
             {(localEmrConfig && localEmrEnabled) && (
                 <div className="field-tooltip__section field-tooltip__emr-section">
                     <div className="field-tooltip__section-label">
-                        <span className="field-tooltip__emr-icon">📍</span> EMR Configuration Location
+                        <span className="field-tooltip__emr-icon">📍</span> EMR UI Control
                     </div>
                     {isEditing ? (
                         <>
