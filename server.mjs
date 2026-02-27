@@ -107,7 +107,7 @@ const server = http.createServer(async (req, res) => {
         // 2. Update EMR Config (Metadata + Image)
         if (method === 'POST' && pathname === '/api/update-emr') {
             const body = await getBody(req).catch(e => { throw e; });
-            const { position, emrLocation, notes, imagePaths, fieldName } = body;
+            const { position, emrLocation, notes, imagePaths, fieldName, enabled } = body;
             console.log(`Updating EMR config for: ${position}`);
 
             console.log(`Loading EMR config from: ${EMR_CONFIG_PATH}`);
@@ -153,15 +153,25 @@ const server = http.createServer(async (req, res) => {
                     fieldName: fieldName || position,
                     emrLocation: emrLocation || '',
                     imagePaths: finalImagePaths,
-                    notes: notes || ''
+                    notes: notes || '',
+                    enabled: enabled !== false
                 };
                 data.entries.push(entry);
             } else {
                 console.log(`Updating existing EMR entry for ${position}`);
-                entry.emrLocation = emrLocation;
-                entry.notes = notes;
-                entry.imagePaths = finalImagePaths;
+                if (typeof emrLocation === 'string') {
+                    entry.emrLocation = emrLocation;
+                }
+                if (typeof notes === 'string') {
+                    entry.notes = notes;
+                }
+                if (Array.isArray(imagePaths)) {
+                    entry.imagePaths = finalImagePaths;
+                }
                 if (fieldName) entry.fieldName = fieldName;
+                if (typeof enabled === 'boolean') {
+                    entry.enabled = enabled;
+                }
             }
 
             // Save the updated configuration

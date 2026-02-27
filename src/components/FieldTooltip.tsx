@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { ParsedField } from '../lib/types';
-import { getFieldDefinition, getComponentDefinition, isEmrConfigurable, getEmrConfig, getSegmentDefinition, saveFieldUpdate, saveEmrUpdate, deleteEmrUpdate } from '../lib/field-dictionary';
+import { getFieldDefinition, getComponentDefinition, isEmrConfigurable, getEmrConfig, getSegmentDefinition, saveFieldUpdate, saveEmrUpdate } from '../lib/field-dictionary';
 import './FieldTooltip.css';
 
 interface FieldTooltipProps {
@@ -40,6 +40,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
 
     const initialEmrConfig = getEmrConfig(field.position);
     const [localEmrConfig, setLocalEmrConfig] = useState(initialEmrConfig);
+    const localEmrEnabled = !!localEmrConfig && localEmrConfig.enabled !== false;
     const emrConfigurable = !!localEmrConfig || isEmrConfigurable(field.position);
 
     const [editFields, setEditFields] = useState<EditableFields & { imagePaths: string[] }>({
@@ -229,14 +230,22 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
         setIsSaving(true);
         try {
             if (localEmrConfig) {
-                // Toggle OFF
-                // Use the exact position from the config entry to ensure successful deletion
+                // Toggle ON/OFF without deleting saved metadata
                 const targetPosition = localEmrConfig.fieldPosition || field.position;
-                const res = await deleteEmrUpdate(targetPosition);
-                if (res.success) {
-                    setLocalEmrConfig(undefined);
+                const res = await saveEmrUpdate(targetPosition, {
+                    fieldName: localEmrConfig.fieldName || editFields.name || fieldDef?.name || field.position,
+                    emrLocation: localEmrConfig.emrLocation || '',
+                    notes: localEmrConfig.notes || '',
+                    imagePaths: localEmrConfig.imagePaths || [],
+                    enabled: !localEmrEnabled
+                });
+                if (res.success && res.data) {
+                    setLocalEmrConfig({
+                        ...res.data,
+                        enabled: !localEmrEnabled
+                    });
                 } else {
-                    alert(`Failed to remove EMR config: ${res.message}`);
+                    alert(`Failed to toggle EMR config: ${res.message}`);
                 }
             } else {
                 // Toggle ON
@@ -244,10 +253,14 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
                     fieldName: editFields.name || fieldDef?.name || field.position,
                     emrLocation: '',
                     notes: '',
-                    imagePaths: []
+                    imagePaths: [],
+                    enabled: true
                 });
                 if (res.success && res.data) {
-                    setLocalEmrConfig(res.data);
+                    setLocalEmrConfig({
+                        ...res.data,
+                        enabled: true
+                    });
                     // Also sync edit fields
                     setEditFields(prev => ({
                         ...prev,
@@ -278,19 +291,25 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
                 fieldName: editFields.name,
                 emrLocation: editFields.emrLocation,
                 notes: editFields.emrNotes,
-                imagePaths: editFields.imagePaths
+                imagePaths: editFields.imagePaths,
+                enabled: localEmrEnabled
             });
 
             if (fieldRes.success && emrRes.success) {
                 // Sync state with saved data
                 const savedEmr = emrRes.data;
                 if (savedEmr) {
+                    const nextEnabled = savedEmr.enabled ?? localEmrEnabled;
                     setEditFields({
                         name: savedEmr.fieldName || '',
                         description: editFields.description,
                         emrLocation: savedEmr.emrLocation || '',
                         emrNotes: savedEmr.notes || '',
                         imagePaths: savedEmr.imagePaths || [],
+                    });
+                    setLocalEmrConfig({
+                        ...savedEmr,
+                        enabled: nextEnabled
                     });
                 }
                 setIsEditing(false);
@@ -350,7 +369,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
                                 <label className="switch">
                                     <input
                                         type="checkbox"
-                                        checked={!!localEmrConfig}
+                                        checked={localEmrEnabled}
                                         onChange={handleToggleEmr}
                                         disabled={isSaving}
                                     />
@@ -458,7 +477,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
             )}
 
             {/* EMR Configuration Details */}
-            {(localEmrConfig || (isEditing && localEmrConfig)) && (
+            {(localEmrConfig && localEmrEnabled) && (
                 <div className="field-tooltip__section field-tooltip__emr-section">
                     <div className="field-tooltip__section-label">
                         <span className="field-tooltip__emr-icon">📍</span> EMR Configuration Location

@@ -61,6 +61,7 @@ export interface EmrConfigEntry {
   emrLocation: string;      // Description of where in the EMR
   imagePaths: string[];     // Path to EMR screenshots
   notes?: string;
+  enabled?: boolean;
 }
 
 export interface EmrConfigData {

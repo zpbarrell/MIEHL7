@@ -3,27 +3,20 @@
     {
       "fieldPosition": "MSH.3",
       "fieldName": "Sending Application",
-      "emrLocation": "System Configuration > Interface Engine > Sending Application ID",
+      "emrLocation": "RTSE: hl7_sending_application",
       "imagePaths": [
-        "/emr-images/msh3-sending-app.png"
+        "/emr-images/MSH_3_1772222165463_0.png"
       ],
       "notes": "This is typically configured in the interface engine settings. The value identifies which application is sending the message."
     },
     {
       "fieldPosition": "MSH.4",
       "fieldName": "Sending Facility",
-      "emrLocation": "System Configuration > Facility Setup > Facility Identifier",
+      "emrLocation": "RTSE: hl7_sending_facility",
       "imagePaths": [
-        "/emr-images/msh4-sending-facility.png"
+        "/emr-images/MSH_4_1772222248160_0.png"
       ],
       "notes": "Set in the facility configuration. Usually matches the organization's OID or facility code."
-    },
-    {
-      "fieldPosition": "MSH.5",
-      "fieldName": "Receiving Application",
-      "emrLocation": "RTSE: hl7_sending_application",
-      "imagePaths": [],
-      "notes": "Configured per interface connection. Identifies the target system."
     },
     {
       "fieldPosition": "ORC.2",
@@ -86,9 +79,12 @@
     {
       "fieldPosition": "MSH.6",
       "fieldName": "Receiving Facility",
-      "emrLocation": "",
-      "imagePaths": [],
-      "notes": ""
+      "emrLocation": "RTSE: hl7_receiving_facility",
+      "imagePaths": [
+        "/emr-images/MSH_6_1772222328357_0.png"
+      ],
+      "notes": "",
+      "enabled": true
     },
     {
       "fieldPosition": "MSH.11",
@@ -175,6 +171,16 @@
       "emrLocation": "",
       "imagePaths": [],
       "notes": "RTSE"
+    },
+    {
+      "fieldPosition": "MSH.5",
+      "fieldName": "Receiving Application",
+      "emrLocation": "RTSE: hl7_receiving_application",
+      "imagePaths": [
+        "/emr-images/MSH_5_1772225213732_0.png"
+      ],
+      "notes": "",
+      "enabled": true
     }
   ]
 }
