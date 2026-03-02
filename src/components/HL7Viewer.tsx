@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
-import type { ParsedMessage } from '../lib/types';
+import type { ParsedMessage, HL7Flow } from '../lib/types';
 import { SegmentRow } from './SegmentRow';
 import './HL7Viewer.css';
 
 interface HL7ViewerProps {
     message: ParsedMessage;
+    flow: HL7Flow;
 }
 
-export function HL7Viewer({ message }: HL7ViewerProps) {
+export function HL7Viewer({ message, flow }: HL7ViewerProps) {
     // Memoize segment count chips so they only recompute when the message changes
     const segmentCounts = useMemo(() => {
         const counts = new Map<string, number>();
@@ -68,7 +69,7 @@ export function HL7Viewer({ message }: HL7ViewerProps) {
             {/* Segments */}
             <div className="hl7-viewer__segments">
                 {message.segments.map((segment, idx) => (
-                    <SegmentRow key={idx} segment={segment} index={idx} />
+                    <SegmentRow key={idx} segment={segment} index={idx} flow={flow} />
                 ))}
             </div>
         </div>

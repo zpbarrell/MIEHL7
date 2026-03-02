@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import type { ParsedSegment } from '../lib/types';
+import type { ParsedSegment, HL7Flow } from '../lib/types';
 import { getSegmentDefinition } from '../lib/field-dictionary';
 import { FieldCell } from './FieldCell';
 import './SegmentRow.css';
@@ -7,6 +7,7 @@ import './SegmentRow.css';
 interface SegmentRowProps {
     segment: ParsedSegment;
     index: number;
+    flow: HL7Flow;
 }
 
 const SEGMENT_COLORS: Record<string, string> = {
@@ -21,7 +22,7 @@ const SEGMENT_COLORS: Record<string, string> = {
     IN1: 'var(--segment-in1)',
 };
 
-export const SegmentRow = memo(function SegmentRow({ segment, index }: SegmentRowProps) {
+export const SegmentRow = memo(function SegmentRow({ segment, index, flow }: SegmentRowProps) {
     const segDef = getSegmentDefinition(segment.name);
     const badgeColor = SEGMENT_COLORS[segment.name] || 'var(--segment-default)';
     const fieldCount = segment.fields.filter((f, i) => i > 0 && f.value).length;
@@ -55,6 +56,7 @@ export const SegmentRow = memo(function SegmentRow({ segment, index }: SegmentRo
                             field={field}
                             segmentName={segment.name}
                             fieldIndex={fieldIdx}
+                            flow={flow}
                         />
                         {fieldIdx > 0 && fieldIdx < segment.fields.length - 1 && (
                             <span className="segment-row__pipe">|</span>

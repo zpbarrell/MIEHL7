@@ -1,0 +1,37 @@
+{
+  "segment": "EVN",
+  "name": "Event Type",
+  "description": "The EVN segment communicates event metadata used in ADT-style messages.",
+  "fields": [
+    {
+      "field": 1,
+      "name": "Event Type Code",
+      "dataType": "ID",
+      "description": "Code identifying the event type.",
+      "required": true,
+      "maxLength": 3
+    },
+    {
+      "field": 2,
+      "name": "Date/Time of Event",
+      "dataType": "TS",
+      "description": "Date/time the event occurred.",
+      "required": true,
+      "maxLength": 19
+    },
+    {
+      "field": 3,
+      "name": "Date/Time Planned Event",
+      "dataType": "TS",
+      "description": "Date/time the event is planned to occur.",
+      "maxLength": 19
+    },
+    {
+      "field": 4,
+      "name": "Event Reason Code",
+      "dataType": "ID",
+      "description": "Reason code for the event.",
+      "maxLength": 3
+    }
+  ]
+}

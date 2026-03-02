@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, memo } from 'react';
-import type { ParsedField } from '../lib/types';
+import type { ParsedField, HL7Flow } from '../lib/types';
 import { isEmrConfigurable, getFieldLabel } from '../lib/field-dictionary';
 import { FieldTooltip } from './FieldTooltip';
 import './FieldCell.css';
@@ -8,22 +8,33 @@ interface FieldCellProps {
     field: ParsedField;
     segmentName: string;
     fieldIndex: number;
+    flow: HL7Flow;
 }
 
-export const FieldCell = memo(function FieldCell({ field, segmentName, fieldIndex }: FieldCellProps) {
+export const FieldCell = memo(function FieldCell({ field, segmentName, fieldIndex, flow }: FieldCellProps) {
     const [showTooltip, setShowTooltip] = useState(false);
     const [isPinned, setIsPinned] = useState(false);
     const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
     const cellRef = useRef<HTMLSpanElement>(null);
     const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const isHoveringTooltipRef = useRef(false);
 
     // Cleanup hover timeout on unmount
     useEffect(() => {
         return () => clearTimeout(timeoutRef.current);
     }, []);
 
-    const emrConfigurable = isEmrConfigurable(`${segmentName}.${fieldIndex}`);
+    const emrConfigurable = isEmrConfigurable(`${segmentName}.${fieldIndex}`, flow);
     const label = getFieldLabel(`${segmentName}.${fieldIndex}`);
+
+    const closeTooltipWithDelay = useCallback(() => {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+            if (!isPinned && !isHoveringTooltipRef.current) {
+                setShowTooltip(false);
+            }
+        }, 150);
+    }, [isPinned]);
 
     // Hover to preview
     const handleMouseEnter = useCallback(() => {
@@ -36,11 +47,21 @@ export const FieldCell = memo(function FieldCell({ field, segmentName, fieldInde
 
     const handleMouseLeave = useCallback(() => {
         if (!isPinned) {
-            timeoutRef.current = setTimeout(() => {
-                setShowTooltip(false);
-            }, 150);
+            closeTooltipWithDelay();
         }
-    }, [isPinned]);
+    }, [isPinned, closeTooltipWithDelay]);
+
+    const handleTooltipHoverStart = useCallback(() => {
+        isHoveringTooltipRef.current = true;
+        clearTimeout(timeoutRef.current);
+    }, []);
+
+    const handleTooltipHoverEnd = useCallback(() => {
+        isHoveringTooltipRef.current = false;
+        if (!isPinned) {
+            closeTooltipWithDelay();
+        }
+    }, [isPinned, closeTooltipWithDelay]);
 
     // Click to pin
     const handleClick = useCallback((e: React.MouseEvent) => {
@@ -113,8 +134,11 @@ export const FieldCell = memo(function FieldCell({ field, segmentName, fieldInde
                     field={field}
                     segmentName={segmentName}
                     fieldIndex={fieldIndex}
+                    flow={flow}
                     anchorRect={anchorRect}
                     isPinned={isPinned}
+                    onHoverStart={handleTooltipHoverStart}
+                    onHoverEnd={handleTooltipHoverEnd}
                     onClose={handleTooltipClose}
                 />
             )}

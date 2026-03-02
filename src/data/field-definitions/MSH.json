@@ -1,189 +1,139 @@
 {
   "segment": "MSH",
   "name": "Message Header",
-  "description": "The MSH segment defines the intent, source, destination, and some specifics of the syntax of a message.",
+  "description": "The MSH segment defines message routing, control metadata, and protocol version information.",
   "fields": [
     {
       "field": 1,
       "name": "Field Separator",
       "dataType": "ST",
       "description": "Field separator character.",
-      "required": true
+      "required": true,
+      "maxLength": 1
     },
     {
       "field": 2,
       "name": "Encoding Characters",
       "dataType": "ST",
       "description": "Encoding characters.",
-      "required": true
+      "required": true,
+      "maxLength": 4
     },
     {
       "field": 3,
       "name": "Sending Application",
-      "dataType": "HD",
+      "dataType": "ST",
       "description": "Sending application.",
-      "components": [
-        {
-          "position": 1,
-          "name": "Namespace ID",
-          "dataType": "IS"
-        },
-        {
-          "position": 2,
-          "name": "Universal ID",
-          "dataType": "ST"
-        },
-        {
-          "position": 3,
-          "name": "Universal ID Type",
-          "dataType": "ID"
-        }
-      ]
+      "maxLength": 15
     },
     {
       "field": 4,
       "name": "Sending Facility",
-      "dataType": "HD",
+      "dataType": "ST",
       "description": "Sending facility.",
-      "components": [
-        {
-          "position": 1,
-          "name": "Namespace ID",
-          "dataType": "IS"
-        },
-        {
-          "position": 2,
-          "name": "Universal ID",
-          "dataType": "ST"
-        },
-        {
-          "position": 3,
-          "name": "Universal ID Type",
-          "dataType": "ID"
-        }
-      ]
+      "maxLength": 20
     },
     {
       "field": 5,
       "name": "Receiving Application",
-      "dataType": "HD",
+      "dataType": "ST",
       "description": "Receiving application.",
-      "components": [
-        {
-          "position": 1,
-          "name": "Namespace ID",
-          "dataType": "IS"
-        },
-        {
-          "position": 2,
-          "name": "Universal ID",
-          "dataType": "ST"
-        },
-        {
-          "position": 3,
-          "name": "Universal ID Type",
-          "dataType": "ID"
-        }
-      ]
+      "maxLength": 15
     },
     {
       "field": 6,
       "name": "Receiving Facility",
-      "dataType": "HD",
+      "dataType": "ST",
       "description": "Receiving facility.",
-      "components": [
-        {
-          "position": 1,
-          "name": "Namespace ID",
-          "dataType": "IS"
-        },
-        {
-          "position": 2,
-          "name": "Universal ID",
-          "dataType": "ST"
-        },
-        {
-          "position": 3,
-          "name": "Universal ID Type",
-          "dataType": "ID"
-        }
-      ]
+      "maxLength": 30
     },
     {
       "field": 7,
       "name": "Date/Time of Message",
       "dataType": "TS",
-      "description": "Date/time of message."
+      "description": "Date/time of message.",
+      "maxLength": 19
     },
     {
       "field": 8,
       "name": "Security",
       "dataType": "ST",
-      "description": "Security."
+      "description": "Security.",
+      "maxLength": 40
     },
     {
       "field": 9,
       "name": "Message Type",
       "dataType": "ID",
       "description": "Message type.",
-      "required": true
+      "required": true,
+      "maxLength": 7
     },
     {
       "field": 10,
       "name": "Message Control ID",
       "dataType": "ST",
       "description": "Message control ID.",
-      "required": true
+      "required": true,
+      "maxLength": 20
     },
     {
       "field": 11,
       "name": "Processing ID",
       "dataType": "ID",
       "description": "Processing ID.",
-      "required": true
+      "required": true,
+      "maxLength": 1
     },
     {
       "field": 12,
       "name": "Version ID",
       "dataType": "NM",
       "description": "Version ID.",
-      "required": true
+      "required": true,
+      "maxLength": 8
     },
     {
       "field": 13,
       "name": "Sequence Number",
       "dataType": "NM",
-      "description": "Sequence number."
+      "description": "Sequence number.",
+      "maxLength": 15
     },
     {
       "field": 14,
       "name": "Continuation Pointer",
       "dataType": "ST",
-      "description": "Continuation pointer."
+      "description": "Continuation pointer.",
+      "maxLength": 180
     },
     {
       "field": 15,
       "name": "Accept Acknowledgment Type",
       "dataType": "ID",
-      "description": "Accept acknowledgment type."
+      "description": "Accept acknowledgment type.",
+      "maxLength": 2
     },
     {
       "field": 16,
       "name": "Application Acknowledgment Type",
       "dataType": "ID",
-      "description": "Application acknowledgment type."
+      "description": "Application acknowledgment type.",
+      "maxLength": 2
     },
     {
       "field": 17,
       "name": "Country Code",
       "dataType": "ID",
-      "description": "Country code."
+      "description": "Country code.",
+      "maxLength": 2
     },
     {
       "field": 18,
       "name": "Character Set",
       "dataType": "ID",
-      "description": "Character set."
+      "description": "Character set.",
+      "maxLength": 2
     }
   ]
 }

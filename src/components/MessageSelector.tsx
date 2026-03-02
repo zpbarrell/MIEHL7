@@ -1,14 +1,15 @@
 import './MessageSelector.css';
+import type { HL7Flow } from '../lib/types';
 
 interface MessageSelectorProps {
     inventory: Record<string, Record<string, Record<string, string[]>>>;
-    currentDirection: string;
+    currentDirection: HL7Flow;
     currentType: string;
     currentVendor: string;
     currentFilename: string;
-    onSelect: (direction: string, type: string, v: string, filename: string) => void;
-    onDelete: (direction: string, type: string, v: string, filename: string) => void;
-    onDirectionChange: (direction: string) => void;
+    onSelect: (direction: HL7Flow, type: string, v: string, filename: string) => void;
+    onDelete: (direction: HL7Flow, type: string, v: string, filename: string) => void;
+    onDirectionChange: (direction: HL7Flow) => void;
 }
 
 export function MessageSelector({
@@ -36,7 +37,7 @@ export function MessageSelector({
                         <button
                             key={d}
                             className={`message-selector__direction-btn ${d === currentDirection ? 'active' : ''}`}
-                            onClick={() => onDirectionChange(d)}
+                            onClick={() => onDirectionChange(d as HL7Flow)}
                         >
                             {d === 'Inbound' ? '📥' : '📤'} {d}
                         </button>

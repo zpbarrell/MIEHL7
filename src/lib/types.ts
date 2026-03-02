@@ -27,6 +27,8 @@ export interface ParsedMessage {
   fileName?: string;
 }
 
+export type HL7Flow = 'Inbound' | 'Outbound';
+
 // Field Dictionary Structures
 
 export interface ComponentDefinition {
@@ -57,6 +59,7 @@ export interface SegmentDefinitions {
 
 export interface EmrConfigEntry {
   fieldPosition: string;    // e.g. "ORC.3.1"
+  flow?: HL7Flow;
   fieldName: string;
   emrLocation: string;      // Description of where in the EMR
   imagePaths: string[];     // Path to EMR screenshots

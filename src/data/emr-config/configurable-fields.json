@@ -65,7 +65,9 @@
       "fieldName": "Patient Identifier List",
       "emrLocation": "Patient Registration > MRN Configuration > Identifier Types",
       "imagePaths": [],
-      "notes": "MRN format and assigning authority are configured in patient registration settings."
+      "notes": "MRN format and assigning authority are configured in patient registration settings.",
+      "flow": "Outbound",
+      "enabled": true
     },
     {
       "fieldPosition": "PID.18",
@@ -84,7 +86,8 @@
         "/emr-images/MSH_6_1772222328357_0.png"
       ],
       "notes": "",
-      "enabled": true
+      "enabled": true,
+      "flow": "Outbound"
     },
     {
       "fieldPosition": "MSH.11",
@@ -114,7 +117,9 @@
       "fieldName": "Patient ID (External)",
       "emrLocation": "",
       "imagePaths": [],
-      "notes": ""
+      "notes": "",
+      "flow": "Outbound",
+      "enabled": false
     },
     {
       "fieldPosition": "PID.5",
@@ -179,6 +184,24 @@
       "imagePaths": [
         "/emr-images/MSH_5_1772225213732_0.png"
       ],
+      "notes": "",
+      "enabled": true
+    },
+    {
+      "fieldPosition": "MSH.3",
+      "flow": "Inbound",
+      "fieldName": "Sending Application",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "",
+      "enabled": true
+    },
+    {
+      "fieldPosition": "PV1.18",
+      "flow": "Outbound",
+      "fieldName": "Patient Type",
+      "emrLocation": "",
+      "imagePaths": [],
       "notes": "",
       "enabled": true
     }

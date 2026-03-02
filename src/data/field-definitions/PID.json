@@ -1,362 +1,282 @@
 {
   "segment": "PID",
   "name": "Patient Identification",
-  "description": "The PID segment is used to communicate patient identification information.",
+  "description": "The PID segment is used to communicate patient identification and demographic information.",
   "fields": [
     {
       "field": 1,
       "name": "Set ID - PID",
       "dataType": "SI",
-      "description": "Sequence number used when multiple PID segments are sent in a single message.",
+      "description": "Sequence number used when multiple PID segments are sent.",
       "maxLength": 4
     },
     {
       "field": 2,
-      "name": "Patient ID (External)",
+      "name": "Patient ID",
       "dataType": "CX",
-      "description": "External patient identifier (deprecated in v2.3.1+).",
+      "description": "Patient identifier.",
       "maxLength": 20
     },
     {
       "field": 3,
       "name": "Patient Identifier List",
       "dataType": "CX",
-      "description": "List of patient identifiers (MRN, account number, etc.).",
+      "description": "List of patient identifiers.",
       "required": true,
-      "components": [
-        {
-          "position": 1,
-          "name": "ID Number",
-          "dataType": "ST"
-        },
-        {
-          "position": 2,
-          "name": "Check Digit",
-          "dataType": "ST"
-        },
-        {
-          "position": 3,
-          "name": "Check Digit Scheme",
-          "dataType": "ID"
-        },
-        {
-          "position": 4,
-          "name": "Assigning Authority",
-          "dataType": "HD"
-        },
-        {
-          "position": 5,
-          "name": "Identifier Type Code",
-          "dataType": "ID"
-        },
-        {
-          "position": 6,
-          "name": "Assigning Facility",
-          "dataType": "HD"
-        }
-      ]
+      "maxLength": 250
     },
     {
       "field": 4,
-      "name": "Alternate Patient ID",
+      "name": "Alternate Patient ID - PID",
       "dataType": "CX",
-      "description": "Alternate patient identifier (deprecated).",
+      "description": "Alternate patient identifier.",
       "maxLength": 20
     },
     {
       "field": 5,
       "name": "Patient Name",
       "dataType": "XPN",
-      "description": "Legal name of the patient.",
+      "description": "Patient legal name.",
       "required": true,
-      "components": [
-        {
-          "position": 1,
-          "name": "Family Name",
-          "dataType": "FN"
-        },
-        {
-          "position": 2,
-          "name": "Given Name",
-          "dataType": "ST"
-        },
-        {
-          "position": 3,
-          "name": "Second/Middle Name",
-          "dataType": "ST"
-        },
-        {
-          "position": 4,
-          "name": "Suffix",
-          "dataType": "ST"
-        },
-        {
-          "position": 5,
-          "name": "Prefix",
-          "dataType": "ST"
-        },
-        {
-          "position": 6,
-          "name": "Degree",
-          "dataType": "IS"
-        },
-        {
-          "position": 7,
-          "name": "Name Type Code",
-          "dataType": "ID"
-        }
-      ]
+      "maxLength": 250
     },
     {
       "field": 6,
       "name": "Mother's Maiden Name",
       "dataType": "XPN",
-      "description": "Family name under which the patient's mother was born."
+      "description": "Mother's maiden name.",
+      "maxLength": 250
     },
     {
       "field": 7,
       "name": "Date/Time of Birth",
       "dataType": "TS",
-      "description": "Patient's date and time of birth.",
+      "description": "Patient date/time of birth.",
       "maxLength": 26
     },
     {
       "field": 8,
-      "name": "Administrative Sex",
+      "name": "Sex",
       "dataType": "IS",
-      "description": "Patient's sex (M, F, O, U, A, N).",
+      "description": "Administrative sex.",
       "maxLength": 1
     },
     {
       "field": 9,
       "name": "Patient Alias",
       "dataType": "XPN",
-      "description": "Names by which the patient has been known (deprecated)."
+      "description": "Patient alias names.",
+      "maxLength": 250
     },
     {
       "field": 10,
       "name": "Race",
       "dataType": "CE",
-      "description": "Patient's race.",
-      "components": [
-        {
-          "position": 1,
-          "name": "Identifier",
-          "dataType": "ST"
-        },
-        {
-          "position": 2,
-          "name": "Text",
-          "dataType": "ST"
-        },
-        {
-          "position": 3,
-          "name": "Coding System",
-          "dataType": "ID"
-        }
-      ]
+      "description": "Patient race.",
+      "maxLength": 250
     },
     {
       "field": 11,
       "name": "Patient Address",
       "dataType": "XAD",
-      "description": "Mailing address of the patient.",
-      "components": [
-        {
-          "position": 1,
-          "name": "Street Address",
-          "dataType": "SAD"
-        },
-        {
-          "position": 2,
-          "name": "Other Designation",
-          "dataType": "ST"
-        },
-        {
-          "position": 3,
-          "name": "City",
-          "dataType": "ST"
-        },
-        {
-          "position": 4,
-          "name": "State/Province",
-          "dataType": "ST"
-        },
-        {
-          "position": 5,
-          "name": "Zip/Postal Code",
-          "dataType": "ST"
-        },
-        {
-          "position": 6,
-          "name": "Country",
-          "dataType": "ID"
-        },
-        {
-          "position": 7,
-          "name": "Address Type",
-          "dataType": "ID"
-        }
-      ]
+      "description": "Patient address.",
+      "maxLength": 250
     },
     {
       "field": 12,
       "name": "County Code",
       "dataType": "IS",
-      "description": "Patient's county code.",
+      "description": "County code.",
       "maxLength": 4
     },
     {
       "field": 13,
       "name": "Phone Number - Home",
       "dataType": "XTN",
-      "description": "Patient's home phone number.",
-      "components": [
-        {
-          "position": 1,
-          "name": "Telephone Number",
-          "dataType": "ST"
-        },
-        {
-          "position": 2,
-          "name": "Telecommunication Use Code",
-          "dataType": "ID"
-        },
-        {
-          "position": 3,
-          "name": "Telecommunication Equipment Type",
-          "dataType": "ID"
-        }
-      ]
+      "description": "Home phone number.",
+      "maxLength": 250
     },
     {
       "field": 14,
       "name": "Phone Number - Business",
       "dataType": "XTN",
-      "description": "Patient's business phone number."
+      "description": "Business phone number.",
+      "maxLength": 250
     },
     {
       "field": 15,
       "name": "Primary Language",
       "dataType": "CE",
-      "description": "Patient's primary language."
+      "description": "Primary language.",
+      "maxLength": 250
     },
     {
       "field": 16,
       "name": "Marital Status",
       "dataType": "CE",
-      "description": "Patient's marital status."
+      "description": "Marital status.",
+      "maxLength": 250
     },
     {
       "field": 17,
       "name": "Religion",
       "dataType": "CE",
-      "description": "Patient's religion."
+      "description": "Religion.",
+      "maxLength": 250
     },
     {
       "field": 18,
       "name": "Patient Account Number",
       "dataType": "CX",
-      "description": "Patient's account number at the facility.",
-      "components": [
-        {
-          "position": 1,
-          "name": "ID Number",
-          "dataType": "ST"
-        },
-        {
-          "position": 2,
-          "name": "Check Digit",
-          "dataType": "ST"
-        },
-        {
-          "position": 3,
-          "name": "Check Digit Scheme",
-          "dataType": "ID"
-        },
-        {
-          "position": 4,
-          "name": "Assigning Authority",
-          "dataType": "HD"
-        }
-      ]
+      "description": "Patient account number.",
+      "maxLength": 250
     },
     {
       "field": 19,
-      "name": "SSN Number - Patient",
+      "name": "SSN Number - Patient (not used)",
       "dataType": "ST",
-      "description": "Patient's Social Security Number (deprecated, use PID.3).",
+      "description": "Social security number.",
       "maxLength": 16
     },
     {
       "field": 20,
-      "name": "Driver's License Number",
+      "name": "Driver's License Number - Patient (not used)",
       "dataType": "DLN",
-      "description": "Patient's driver's license number."
+      "description": "Driver's license number.",
+      "maxLength": 25
     },
     {
       "field": 21,
       "name": "Mother's Identifier",
       "dataType": "CX",
-      "description": "Identifier of mother for newborn patients."
+      "description": "Mother's identifier.",
+      "maxLength": 250
     },
     {
       "field": 22,
       "name": "Ethnic Group",
       "dataType": "CE",
-      "description": "Patient's ethnic group."
+      "description": "Ethnic group.",
+      "maxLength": 250
     },
     {
       "field": 23,
       "name": "Birth Place",
       "dataType": "ST",
-      "description": "Patient's place of birth.",
+      "description": "Birth place.",
       "maxLength": 250
     },
     {
       "field": 24,
       "name": "Multiple Birth Indicator",
       "dataType": "ID",
-      "description": "Indicates whether the patient was part of a multiple birth.",
+      "description": "Multiple birth indicator.",
       "maxLength": 1
     },
     {
       "field": 25,
       "name": "Birth Order",
       "dataType": "NM",
-      "description": "In a multiple birth, the birth order.",
+      "description": "Birth order.",
       "maxLength": 2
     },
     {
       "field": 26,
       "name": "Citizenship",
       "dataType": "CE",
-      "description": "Patient's citizenship."
+      "description": "Citizenship.",
+      "maxLength": 250
     },
     {
       "field": 27,
       "name": "Veterans Military Status",
       "dataType": "CE",
-      "description": "Military status of a veteran."
+      "description": "Veterans military status.",
+      "maxLength": 250
     },
     {
       "field": 28,
       "name": "Nationality",
       "dataType": "CE",
-      "description": "Patient's nationality (deprecated in v2.4)."
+      "description": "Nationality.",
+      "maxLength": 250
     },
     {
       "field": 29,
       "name": "Patient Death Date and Time",
       "dataType": "TS",
-      "description": "Date and time of patient's death."
+      "description": "Patient death date and time.",
+      "maxLength": 26
     },
     {
       "field": 30,
       "name": "Patient Death Indicator",
       "dataType": "ID",
-      "description": "Indicates whether the patient is deceased.",
+      "description": "Patient death indicator.",
       "maxLength": 1
+    },
+    {
+      "field": 31,
+      "name": "Identity Unknown Indicator",
+      "dataType": "ID",
+      "description": "Identity unknown indicator.",
+      "maxLength": 1
+    },
+    {
+      "field": 32,
+      "name": "Identity Reliability Code",
+      "dataType": "IS",
+      "description": "Identity reliability code.",
+      "maxLength": 20
+    },
+    {
+      "field": 33,
+      "name": "Last Update Date/Time",
+      "dataType": "TS",
+      "description": "Last update date/time.",
+      "maxLength": 26
+    },
+    {
+      "field": 34,
+      "name": "Last Update Facility",
+      "dataType": "HD",
+      "description": "Last update facility.",
+      "maxLength": 241
+    },
+    {
+      "field": 35,
+      "name": "Species Code",
+      "dataType": "CE",
+      "description": "Species code.",
+      "maxLength": 250
+    },
+    {
+      "field": 36,
+      "name": "Breed Code",
+      "dataType": "CE",
+      "description": "Breed code.",
+      "maxLength": 250
+    },
+    {
+      "field": 37,
+      "name": "Strain",
+      "dataType": "ST",
+      "description": "Strain.",
+      "maxLength": 80
+    },
+    {
+      "field": 38,
+      "name": "Production Class Code",
+      "dataType": "CE",
+      "description": "Production class code.",
+      "maxLength": 250
+    },
+    {
+      "field": 39,
+      "name": "Tribal Citizenship",
+      "dataType": "CWE",
+      "description": "Tribal citizenship.",
+      "maxLength": 250
     }
   ]
 }

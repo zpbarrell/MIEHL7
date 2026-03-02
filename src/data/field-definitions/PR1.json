@@ -1,0 +1,20 @@
+{
+  "segment": "PR1",
+  "name": "Procedures",
+  "description": "The PR1 segment is used to transmit procedure information.",
+  "fields": [
+    { "field": 1, "name": "Set ID - Procedure", "dataType": "SI", "description": "Set ID - Procedure.", "required": true, "maxLength": 4 },
+    { "field": 2, "name": "Procedure Coding Method", "dataType": "ID", "description": "Procedure coding method.", "required": true, "maxLength": 2 },
+    { "field": 3, "name": "Procedure Code", "dataType": "ID", "description": "Procedure code.", "required": true, "maxLength": 10 },
+    { "field": 4, "name": "Procedure Description", "dataType": "ST", "description": "Procedure description.", "maxLength": 40 },
+    { "field": 5, "name": "Procedure Date/Time", "dataType": "TS", "description": "Procedure date/time.", "required": true, "maxLength": 19 },
+    { "field": 6, "name": "Procedure Type", "dataType": "ID", "description": "Procedure type.", "required": true, "maxLength": 2 },
+    { "field": 7, "name": "Procedure Minutes", "dataType": "NM", "description": "Procedure minutes.", "maxLength": 4 },
+    { "field": 8, "name": "Anesthesiologist", "dataType": "CN", "description": "Anesthesiologist.", "maxLength": 60 },
+    { "field": 9, "name": "Anesthesia Code", "dataType": "ID", "description": "Anesthesia code.", "maxLength": 2 },
+    { "field": 10, "name": "Anesthesia Minutes", "dataType": "NM", "description": "Anesthesia minutes.", "maxLength": 4 },
+    { "field": 11, "name": "Surgeon", "dataType": "CN", "description": "Surgeon.", "maxLength": 60 },
+    { "field": 12, "name": "Resident Code", "dataType": "CN", "description": "Resident code.", "maxLength": 60 },
+    { "field": 13, "name": "Consent Code", "dataType": "ID", "description": "Consent code.", "maxLength": 2 }
+  ]
+}

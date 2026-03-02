@@ -1,0 +1,9 @@
+MSH|^~\&|WCDataSend|BetterCorp|wc_hl7d|recv_facil|20260301193446||DFT^P03^DFT_P03|DSD177241168656097|P|2.5|||||||||||||
+EVN||20260301193446|||||BetterCorp
+PID|1||WCID:36144^^^WCID&1.2.840.114398.1.7921&ISO^MR^1.2.840.114398.1.7921&WCID&ISO~122778^^^EHID&1.2.840.114398.1.668.5&ISO^MR^1.2.840.114398.1.668.5&EHID&ISO~370727^^^BetterCorp&1.2.840.114398.1.668.6&ISO^MR^1.2.840.114398.1.668.6&BetterCorp&ISO~616247000^^^^SS||Ta-a^Michele||19830208000000|F|||422 Dos Reis Road^^Lathrop^CA^95330^US||6197433486^PRN^PH^mmtaa@bb.edu~9254539867^PRN^CP|9252941266^WPN^PH||||9129^^^SNLCA925|616247079||||||||||||||||||||
+FT1|1|9129||20251124090000||CG|97110|15m Therapeutic Exercises||1|0.000000|0.000000||||^^^^SNLCA925^^^^SNL CA Bldg 925||PTPHCDAILY|M25.561^Pain in right knee^I10|6987^Dunc^Jackson^William|||7098|6987^Dunc^Jackson^William|97110||||
+PR1|1|CPT|97110|15m Therapeutic Exercises|20251124090000|||||||6987^Dunc^Jackson^William|||M25.561^Pain in right knee^I10|
+FT1|2|9129||20251124090000||CG|97530|15m Therapeutic Activities||1|0.000000|0.000000||||^^^^SNLCA925^^^^SNL CA Bldg 925||PTPHCDAILY|M25.561^Pain in right knee^I10|6987^Dunc^Jackson^William|||7099|6987^Dunc^Jackson^William|97530||||
+PR1|2|CPT|97530|15m Therapeutic Activities|20251124090000|||||||6987^Dunc^Jackson^William|||M25.561^Pain in right knee^I10|
+GT1|1|122778|Ta-a^Michele||422 Dos Reis Road^^Lathrop^CA^95330|6197433486|9252941266|19830208000000|F|||616247079|||||||||||||||||||||||||||||||||||||||||||
+IN1|1|6|Kaiser|Kaiser HRA|PO Box 30547^^Salt Lake City^UT^84130|||||||20251020|||Kaiser HRA|Ta-a^Michele|Self|||||||||||||||||||11987281|||||||F||||||

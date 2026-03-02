@@ -9,6 +9,16 @@ import './App.css';
 
 type Inventory = Record<string, Record<string, Record<string, string[]>>>;
 
+function hasMessageInInventory(
+  inv: Inventory,
+  direction: HL7Flow,
+  type: string,
+  vendor: string,
+  filename: string
+): boolean {
+  return Boolean(inv?.[direction]?.[type]?.[vendor]?.includes(filename));
+}
+
 /** Find the first available message in an inventory, preferring Inbound. */
 function findFirstMessage(inv: Inventory): { direction: HL7Flow; type: string; vendor: string; filename: string } | null {
   for (const d of ['Outbound', 'Inbound'] as HL7Flow[]) {
@@ -39,6 +49,48 @@ function App() {
   useEffect(() => {
     loadInventory();
   }, []);
+
+  // Keep inventory in sync when files are changed directly on disk
+  useEffect(() => {
+    const intervalId = window.setInterval(async () => {
+      try {
+        const res = await fetch('/api/inventory');
+        const data = await res.json();
+        if (!data.success) return;
+
+        const nextInventory: Inventory = data.inventory;
+        setInventory(nextInventory);
+
+        if (
+          currentDirection &&
+          currentType &&
+          currentVendor &&
+          currentFilename &&
+          hasMessageInInventory(nextInventory, currentDirection, currentType, currentVendor, currentFilename)
+        ) {
+          return;
+        }
+
+        const first = findFirstMessage(nextInventory);
+        if (first) {
+          setCurrentDirection(first.direction);
+          setCurrentType(first.type);
+          setCurrentVendor(first.vendor);
+          setCurrentFilename(first.filename);
+          loadMessage(first.direction, first.type, first.vendor, first.filename);
+        } else {
+          setActiveMessage(null);
+          setCurrentType('');
+          setCurrentVendor('Default');
+          setCurrentFilename('');
+        }
+      } catch {
+        // Ignore periodic refresh failures
+      }
+    }, 3000);
+
+    return () => window.clearInterval(intervalId);
+  }, [currentDirection, currentType, currentVendor, currentFilename]);
 
   const loadInventory = async (selectLatest?: { direction: HL7Flow, type: string, vendor: string, filename: string }) => {
     try {

@@ -13,6 +13,10 @@ const DEFS_DIR = path.join(DATA_DIR, 'field-definitions');
 const EMR_CONFIG_PATH = path.join(DATA_DIR, 'emr-config', 'configurable-fields.json');
 const IMAGES_DIR = path.join(__dirname, 'public', 'emr-images');
 const MESSAGES_DIR = path.join(DATA_DIR, 'messages');
+const DEFAULT_VENDOR = 'Default';
+
+const normalizeFlow = (flow) => (flow === 'Inbound' ? 'Inbound' : 'Outbound');
+const entryFlow = (entry) => normalizeFlow(entry?.flow);
 
 const server = http.createServer(async (req, res) => {
     const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
@@ -108,13 +112,14 @@ const server = http.createServer(async (req, res) => {
         if (method === 'POST' && pathname === '/api/update-emr') {
             const body = await getBody(req).catch(e => { throw e; });
             const { position, emrLocation, notes, imagePaths, fieldName, enabled } = body;
-            console.log(`Updating EMR config for: ${position}`);
+            const flow = normalizeFlow(body.flow);
+            console.log(`Updating EMR config for: ${flow} ${position}`);
 
             console.log(`Loading EMR config from: ${EMR_CONFIG_PATH}`);
             const content = await fs.readFile(EMR_CONFIG_PATH, 'utf-8');
             const data = JSON.parse(content);
 
-            let entry = data.entries.find(e => e.fieldPosition === position);
+            let entry = data.entries.find(e => e.fieldPosition === position && entryFlow(e) === flow);
 
             // Track old images for potential cleanup
             const oldImagePaths = entry ? [...(entry.imagePaths || [])] : [];
@@ -147,9 +152,10 @@ const server = http.createServer(async (req, res) => {
             }
 
             if (!entry) {
-                console.log(`Creating NEW EMR entry for ${position}`);
+                console.log(`Creating NEW EMR entry for ${flow} ${position}`);
                 entry = {
                     fieldPosition: position,
+                    flow,
                     fieldName: fieldName || position,
                     emrLocation: emrLocation || '',
                     imagePaths: finalImagePaths,
@@ -158,7 +164,8 @@ const server = http.createServer(async (req, res) => {
                 };
                 data.entries.push(entry);
             } else {
-                console.log(`Updating existing EMR entry for ${position}`);
+                console.log(`Updating existing EMR entry for ${flow} ${position}`);
+                entry.flow = flow;
                 if (typeof emrLocation === 'string') {
                     entry.emrLocation = emrLocation;
                 }
@@ -194,18 +201,20 @@ const server = http.createServer(async (req, res) => {
                 }
             }
 
-            return sendJSON({ success: true, message: `EMR config for ${position} updated`, data: entry });
+            return sendJSON({ success: true, message: `EMR config for ${flow} ${position} updated`, data: entry });
         }
 
         // 3. Delete EMR Config
         if (method === 'POST' && pathname === '/api/delete-emr') {
-            const { position } = await getBody(req);
-            console.log(`Deleting EMR config for: ${position}`);
+            const body = await getBody(req);
+            const { position } = body;
+            const flow = normalizeFlow(body.flow);
+            console.log(`Deleting EMR config for: ${flow} ${position}`);
 
             const content = await fs.readFile(EMR_CONFIG_PATH, 'utf-8');
             const data = JSON.parse(content);
 
-            const index = data.entries.findIndex(e => e.fieldPosition === position);
+            const index = data.entries.findIndex(e => e.fieldPosition === position && entryFlow(e) === flow);
             if (index !== -1) {
                 const entry = data.entries[index];
                 const imagePaths = entry.imagePaths || [];
@@ -227,8 +236,8 @@ const server = http.createServer(async (req, res) => {
                     }
                 }
 
-                console.log(`Successfully deleted EMR config for ${position}`);
-                return sendJSON({ success: true, message: `EMR config for ${position} removed` });
+                console.log(`Successfully deleted EMR config for ${flow} ${position}`);
+                return sendJSON({ success: true, message: `EMR config for ${flow} ${position} removed` });
             }
 
             return sendJSON({ success: false, message: 'EMR entry not found' }, 404);
@@ -255,22 +264,35 @@ const server = http.createServer(async (req, res) => {
                         const typePath = path.join(dirPath, typeName);
                         inventory[direction][typeName] = {};
 
-                        const vendors = await fs.readdir(typePath, { withFileTypes: true }).catch(() => []);
+                        const entries = await fs.readdir(typePath, { withFileTypes: true }).catch(() => []);
+
+                        // Support files directly under direction/type by treating them as Default vendor
+                        const rootFiles = entries
+                            .filter(e => e.isFile() && e.name.endsWith('.hl7'))
+                            .map(e => e.name.replace('.hl7', ''))
+                            .sort();
+                        if (rootFiles.length > 0) {
+                            inventory[direction][typeName][DEFAULT_VENDOR] = rootFiles;
+                        }
+
                         // Read all vendor folders in parallel
-                        await Promise.all(vendors.filter(v => v.isDirectory()).map(async (vendorEnt) => {
+                        await Promise.all(entries.filter(v => v.isDirectory()).map(async (vendorEnt) => {
                             const vendorName = vendorEnt.name;
                             const vendorPath = path.join(typePath, vendorName);
 
-                            const files = await fs.readdir(vendorPath);
-                            inventory[direction][typeName][vendorName] = files
+                            const files = await fs.readdir(vendorPath).catch(() => []);
+                            const hl7Files = files
                                 .filter(f => f.endsWith('.hl7'))
                                 .map(f => f.replace('.hl7', ''))
                                 .sort();
+                            if (hl7Files.length > 0) {
+                                inventory[direction][typeName][vendorName] = hl7Files;
+                            }
                         }));
                     }));
                 }));
 
-                return sendJSON({ success: true, inventory, serverVersion: '2026-02-25.03 (HierarchFix)' });
+                return sendJSON({ success: true, inventory, serverVersion: '2026-03-02.01 (InventoryRefresh+LegacyVendor)' });
             } catch (err) {
                 console.error('Failed to read hierarchical inventory:', err);
                 return sendJSON({ success: false, message: 'Could not read message library', error: err.message }, 500);
@@ -320,13 +342,20 @@ const server = http.createServer(async (req, res) => {
                 return sendJSON({ success: false, message: 'Missing path parameters (direction, type, vendor, filename)' }, 400);
             }
 
-            const filePath = path.join(MESSAGES_DIR, direction, type, vendor, `${targetFilename}.hl7`);
+            const vendorFilePath = path.join(MESSAGES_DIR, direction, type, vendor, `${targetFilename}.hl7`);
+            const rootTypeFilePath = path.join(MESSAGES_DIR, direction, type, `${targetFilename}.hl7`);
 
             try {
-                const content = await fs.readFile(filePath, 'utf-8');
+                let content;
+                try {
+                    content = await fs.readFile(vendorFilePath, 'utf-8');
+                } catch {
+                    // Backward compatibility for files directly under direction/type
+                    content = await fs.readFile(rootTypeFilePath, 'utf-8');
+                }
                 return sendJSON({ success: true, content });
             } catch (err) {
-                console.error(`Failed to read HL7 ${filePath}:`, err);
+                console.error(`Failed to read HL7 ${vendorFilePath} or ${rootTypeFilePath}:`, err);
                 return sendJSON({ success: false, message: 'Message not found', error: err.message }, 404);
             }
         }
@@ -341,9 +370,16 @@ const server = http.createServer(async (req, res) => {
                 return sendJSON({ success: false, message: 'Missing path parameters' }, 400);
             }
 
-            const filePath = path.join(MESSAGES_DIR, direction, type, vendor, `${filename}.hl7`);
+            const vendorFilePath = path.join(MESSAGES_DIR, direction, type, vendor, `${filename}.hl7`);
+            const rootTypeFilePath = path.join(MESSAGES_DIR, direction, type, `${filename}.hl7`);
+            let filePath = vendorFilePath;
 
             try {
+                // Prefer vendor path, fallback to root type path for legacy files
+                await fs.access(filePath).catch(async () => {
+                    filePath = rootTypeFilePath;
+                    await fs.access(filePath);
+                });
                 await fs.unlink(filePath);
                 console.log(`Successfully deleted file: ${filePath}`);
 

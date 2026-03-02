@@ -11,6 +11,8 @@ interface FieldTooltipProps {
     flow: HL7Flow;
     anchorRect: DOMRect;
     isPinned: boolean;
+    onHoverStart?: () => void;
+    onHoverEnd?: () => void;
     onClose: () => void;
 }
 
@@ -27,6 +29,8 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
     fieldIndex,
     flow,
     anchorRect,
+    onHoverStart,
+    onHoverEnd,
     onClose,
     isPinned = false
 }) => {
@@ -167,10 +171,15 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
     }, [onClose, isEditing, magnifiedImage]);
 
     const handleMouseLeave = () => {
+        onHoverEnd?.();
         // Only auto-close on mouse leave if NOT pinned
         if (!isPinned) {
             onClose();
         }
+    };
+
+    const handleMouseEnter = () => {
+        onHoverStart?.();
     };
 
     const handleEditClick = (e: React.MouseEvent) => {
@@ -349,6 +358,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
             ref={tooltipRef}
             className={`field-tooltip ${isVisible ? 'field-tooltip--visible' : ''} ${emrConfigurable ? 'field-tooltip--emr' : ''} ${isPinned ? 'field-tooltip--pinned' : ''}`}
             style={{ top: position.top, left: position.left }}
+            onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onClick={(e) => e.stopPropagation()}
         >

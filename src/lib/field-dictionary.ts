@@ -11,6 +11,10 @@ import DG1_JSON from '../data/field-definitions/DG1.json';
 import IN1_JSON from '../data/field-definitions/IN1.json';
 import PV1_JSON from '../data/field-definitions/PV1.json';
 import NTE_JSON from '../data/field-definitions/NTE.json';
+import EVN_JSON from '../data/field-definitions/EVN.json';
+import PR1_JSON from '../data/field-definitions/PR1.json';
+import FT1_JSON from '../data/field-definitions/FT1.json';
+import GT1_JSON from '../data/field-definitions/GT1.json';
 
 // Import EMR config (Base defaults)
 import emrConfig_JSON from '../data/emr-config/configurable-fields.json';
@@ -42,7 +46,11 @@ const allSegments: SegmentDefinitions[] = [
     DG1_JSON,
     IN1_JSON,
     PV1_JSON,
-    NTE_JSON
+    NTE_JSON,
+    EVN_JSON,
+    PR1_JSON,
+    FT1_JSON,
+    GT1_JSON
 ];
 allSegments.forEach(seg => {
     segmentMap.set(seg.segment, seg as SegmentDefinitions);
