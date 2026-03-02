@@ -1,14 +1,35 @@
-import { useMemo } from 'react';
-import type { ParsedMessage, HL7Flow } from '../lib/types';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ParsedMessage, HL7Flow, MessageContext } from '../lib/types';
 import { SegmentRow } from './SegmentRow';
 import './HL7Viewer.css';
 
 interface HL7ViewerProps {
     message: ParsedMessage;
     flow: HL7Flow;
+    messageContext: MessageContext;
+    onMessageFieldUpdated: () => void;
+    onExportXlsx: () => void;
+    onExportHl7: () => void;
+    isExporting: boolean;
 }
 
-export function HL7Viewer({ message, flow }: HL7ViewerProps) {
+export function HL7Viewer({ message, flow, messageContext, onMessageFieldUpdated, onExportXlsx, onExportHl7, isExporting }: HL7ViewerProps) {
+    const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+    const exportMenuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!isExportMenuOpen) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node;
+            if (!exportMenuRef.current?.contains(target)) {
+                setIsExportMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isExportMenuOpen]);
     // Memoize segment count chips so they only recompute when the message changes
     const segmentCounts = useMemo(() => {
         const counts = new Map<string, number>();
@@ -38,6 +59,41 @@ export function HL7Viewer({ message, flow }: HL7ViewerProps) {
             <div className="hl7-viewer__header">
                 <div className="hl7-viewer__header-left">
                     <h3 className="hl7-viewer__title">Message Viewer</h3>
+                    <div className="hl7-viewer__export-menu" ref={exportMenuRef}>
+                        <button
+                            type="button"
+                            className="hl7-viewer__export-btn"
+                            onClick={() => setIsExportMenuOpen((prev) => !prev)}
+                            disabled={isExporting}
+                            title="Export current message"
+                        >
+                            {isExporting ? 'Exporting…' : 'Export'} ▾
+                        </button>
+                        {isExportMenuOpen && !isExporting && (
+                            <div className="hl7-viewer__export-dropdown" role="menu" aria-label="Export options">
+                                <button
+                                    type="button"
+                                    className="hl7-viewer__export-option"
+                                    onClick={() => {
+                                        onExportXlsx();
+                                        setIsExportMenuOpen(false);
+                                    }}
+                                >
+                                    Export as .xlsx
+                                </button>
+                                <button
+                                    type="button"
+                                    className="hl7-viewer__export-option"
+                                    onClick={() => {
+                                        onExportHl7();
+                                        setIsExportMenuOpen(false);
+                                    }}
+                                >
+                                    Export as .hl7
+                                </button>
+                            </div>
+                        )}
+                    </div>
                     <div className="hl7-viewer__message-type">
                         <code>{message.messageType || 'Unknown'}</code>
                     </div>
@@ -69,7 +125,14 @@ export function HL7Viewer({ message, flow }: HL7ViewerProps) {
             {/* Segments */}
             <div className="hl7-viewer__segments">
                 {message.segments.map((segment, idx) => (
-                    <SegmentRow key={idx} segment={segment} index={idx} flow={flow} />
+                    <SegmentRow
+                        key={idx}
+                        segment={segment}
+                        index={idx}
+                        flow={flow}
+                        messageContext={messageContext}
+                        onMessageFieldUpdated={onMessageFieldUpdated}
+                    />
                 ))}
             </div>
         </div>

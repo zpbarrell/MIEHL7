@@ -7,7 +7,9 @@
       "imagePaths": [
         "/emr-images/MSH_3_1772222165463_0.png"
       ],
-      "notes": "This is typically configured in the interface engine settings. The value identifies which application is sending the message."
+      "notes": "This is typically configured in the interface engine settings. The value identifies which application is sending the message.",
+      "flow": "Outbound",
+      "enabled": true
     },
     {
       "fieldPosition": "MSH.4",
@@ -204,6 +206,15 @@
       "imagePaths": [],
       "notes": "",
       "enabled": true
+    },
+    {
+      "fieldPosition": "MSH.7",
+      "flow": "Outbound",
+      "fieldName": "Date/Time of Message",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "",
+      "enabled": false
     }
   ]
 }

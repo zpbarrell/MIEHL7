@@ -1,0 +1,8 @@
+MSH|^~\&|WCDataS|ESHORE|wc_hl7d|CVIX|20260227120741||ORM^O01^ORM_O01|DSD1772212061713357|P|2.5|||||||||||||
+PID|1|WCID:88353|WCID:88353^^^WCID&1.2.840.114398.1.7858&ISO^MR||Test^Garbo^^^^^L||19900101000000|M|||1400 Washington^^Scottown^OH^45678^US^^^Lawrence||4255125859^PRN^PH||||||||||||||||||||||||||
+PV1|1||^^^ESHORE|||||||||||||||||||||||||||||||||||||||||||||||^^^^^1.2.840.114398.1.7858||
+IN1|1||||||||||||||||||||||||||||||||||||||||||||||C||
+ORC|NW|4975|||Pending||^^^^^0||20260227120731|279^Medical Informatics Engineering^MIE||40054^System^Provider^Not In|^^^^OFFICE^^^^^Office||20260227000000||OFFICE||||Office|^^^^^US|(913) 636-4885||||||||
+OBR|1|4975||CVIX123^Xray Chest PA and Lateral^^71020^^CPT|0|20260227120731|20260227120700|||||||||40054^System^Provider^Not In||||||||||||||||||||||||||||||||||
+DG1|1|ICD|I10^HYPERTENSION^I10|HYPERTENSION||||||||||||
+OBX|1|ST|CVXCODE^SIGNATURE CODE||123XYZ||||||||||||||||||||

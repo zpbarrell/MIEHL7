@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import type { ParsedSegment, HL7Flow } from '../lib/types';
+import type { ParsedSegment, HL7Flow, MessageContext } from '../lib/types';
 import { getSegmentDefinition } from '../lib/field-dictionary';
 import { FieldCell } from './FieldCell';
 import './SegmentRow.css';
@@ -8,6 +8,8 @@ interface SegmentRowProps {
     segment: ParsedSegment;
     index: number;
     flow: HL7Flow;
+    messageContext: MessageContext;
+    onMessageFieldUpdated: () => void;
 }
 
 const SEGMENT_COLORS: Record<string, string> = {
@@ -22,7 +24,7 @@ const SEGMENT_COLORS: Record<string, string> = {
     IN1: 'var(--segment-in1)',
 };
 
-export const SegmentRow = memo(function SegmentRow({ segment, index, flow }: SegmentRowProps) {
+export const SegmentRow = memo(function SegmentRow({ segment, index, flow, messageContext, onMessageFieldUpdated }: SegmentRowProps) {
     const segDef = getSegmentDefinition(segment.name);
     const badgeColor = SEGMENT_COLORS[segment.name] || 'var(--segment-default)';
     const fieldCount = segment.fields.filter((f, i) => i > 0 && f.value).length;
@@ -55,8 +57,11 @@ export const SegmentRow = memo(function SegmentRow({ segment, index, flow }: Seg
                         <FieldCell
                             field={field}
                             segmentName={segment.name}
+                            segmentIndex={index}
                             fieldIndex={fieldIdx}
                             flow={flow}
+                            messageContext={messageContext}
+                            onMessageFieldUpdated={onMessageFieldUpdated}
                         />
                         {fieldIdx > 0 && fieldIdx < segment.fields.length - 1 && (
                             <span className="segment-row__pipe">|</span>

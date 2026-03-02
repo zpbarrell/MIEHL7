@@ -1,4 +1,4 @@
-import type { FieldDefinition, ComponentDefinition, EmrConfigEntry, SegmentDefinitions, HL7Flow } from './types';
+import type { FieldDefinition, ComponentDefinition, EmrConfigEntry, SegmentDefinitions, HL7Flow, MessageContext } from './types';
 
 // Import all segment definitions (Base defaults)
 import MSH_JSON from '../data/field-definitions/MSH.json';
@@ -227,6 +227,33 @@ export async function deleteEmrUpdate(position: string, flow: HL7Flow) {
         return result;
     } catch (err) {
         console.error('Failed to delete EMR update:', err);
+        const error = err instanceof Error ? err.message : String(err);
+        return { success: false, error };
+    }
+}
+
+export async function saveMessageFieldValue(
+    message: MessageContext,
+    segmentName: string,
+    segmentIndex: number,
+    fieldIndex: number,
+    value: string
+) {
+    try {
+        const res = await fetch('/api/update-message-field', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...message,
+                segmentName,
+                segmentIndex,
+                fieldIndex,
+                value,
+            })
+        });
+        return await res.json();
+    } catch (err) {
+        console.error('Failed to save message field value:', err);
         const error = err instanceof Error ? err.message : String(err);
         return { success: false, error };
     }

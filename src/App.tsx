@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import type { ParsedMessage, HL7Flow } from './lib/types';
+import type { ParsedMessage, HL7Flow, MessageContext } from './lib/types';
 import { parseHL7Message } from './lib/hl7-parser';
 import { DropZone } from './components/DropZone';
 import { MessageSelector } from './components/MessageSelector';
 import { HL7Viewer } from './components/HL7Viewer';
 import { ImportModal } from './components/ImportModal';
+import { exportMessageAsHl7, exportMessageAsXlsx } from './lib/hl7-export-xlsx';
 import './App.css';
 
 type Inventory = Record<string, Record<string, Record<string, string[]>>>;
@@ -51,6 +52,7 @@ function App() {
   const [currentFilename, setCurrentFilename] = useState<string>('');
   const [activeMessage, setActiveMessage] = useState<ParsedMessage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [importingFile, setImportingFile] = useState<{ content: string; name: string } | null>(null);
   const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode);
 
@@ -294,6 +296,41 @@ function App() {
     setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'));
   }, []);
 
+  const activeMessageContext = useMemo<MessageContext>(() => ({
+    direction: currentDirection,
+    type: currentType,
+    vendor: currentVendor,
+    filename: currentFilename,
+  }), [currentDirection, currentType, currentVendor, currentFilename]);
+
+  const handleMessageFieldUpdated = useCallback(() => {
+    if (!currentDirection || !currentType || !currentVendor || !currentFilename) return;
+    loadMessage(currentDirection, currentType, currentVendor, currentFilename);
+  }, [currentDirection, currentType, currentVendor, currentFilename]);
+
+  const handleExportXlsx = useCallback(async () => {
+    if (!activeMessage) return;
+    setIsExporting(true);
+    try {
+      await exportMessageAsXlsx(activeMessage, currentDirection, currentFilename || activeMessage.fileName);
+    } catch (err: any) {
+      console.error('XLSX export failed:', err);
+      alert(`Export failed: ${err?.message || 'Unknown error'}`);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [activeMessage, currentDirection, currentFilename]);
+
+  const handleExportHl7 = useCallback(() => {
+    if (!activeMessage) return;
+    try {
+      exportMessageAsHl7(activeMessage, currentFilename || activeMessage.fileName);
+    } catch (err: any) {
+      console.error('HL7 export failed:', err);
+      alert(`Export failed: ${err?.message || 'Unknown error'}`);
+    }
+  }, [activeMessage, currentFilename]);
+
   return (
     <div className="app-container">
       {/* Header */}
@@ -348,7 +385,15 @@ function App() {
 
       {/* HL7 Viewer */}
       {activeMessage ? (
-        <HL7Viewer message={activeMessage} flow={currentDirection} />
+        <HL7Viewer
+          message={activeMessage}
+          flow={currentDirection}
+          messageContext={activeMessageContext}
+          onMessageFieldUpdated={handleMessageFieldUpdated}
+          onExportXlsx={handleExportXlsx}
+          onExportHl7={handleExportHl7}
+          isExporting={isExporting}
+        />
       ) : (
         <div className="app-welcome glass-card animate-fade-in-up">
           <div className="app-welcome__content">

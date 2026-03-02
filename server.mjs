@@ -18,6 +18,45 @@ const DEFAULT_VENDOR = 'Default';
 const normalizeFlow = (flow) => (flow === 'Inbound' ? 'Inbound' : 'Outbound');
 const entryFlow = (entry) => normalizeFlow(entry?.flow);
 
+const getLineBreak = (content) => {
+    if (content.includes('\r\n')) return '\r\n';
+    if (content.includes('\n')) return '\n';
+    return '\r';
+};
+
+const hasTrailingLineBreak = (content) => /(\r\n|\n|\r)$/.test(content);
+
+const escapeHl7Value = (value = '') =>
+    value
+        .replace(/\\/g, '\\E\\')
+        .replace(/\|/g, '\\F\\')
+        .replace(/\^/g, '\\S\\')
+        .replace(/~/g, '\\R\\')
+        .replace(/&/g, '\\T\\');
+
+const updateSegmentFieldValue = (segmentRaw, segmentName, fieldIndex, value) => {
+    const parts = segmentRaw.split('|');
+    const normalizedSegment = String(segmentName || '').trim().toUpperCase();
+    if (parts[0] !== normalizedSegment) {
+        throw new Error(`Segment mismatch: expected ${normalizedSegment}, found ${parts[0]}`);
+    }
+
+    if (normalizedSegment === 'MSH' && fieldIndex === 1) {
+        throw new Error('MSH.1 (field separator) cannot be edited');
+    }
+
+    const targetIndex = normalizedSegment === 'MSH' ? fieldIndex - 1 : fieldIndex;
+    if (!Number.isInteger(targetIndex) || targetIndex < 1) {
+        throw new Error('Invalid field index');
+    }
+
+    while (parts.length <= targetIndex) {
+        parts.push('');
+    }
+    parts[targetIndex] = escapeHl7Value(String(value ?? ''));
+    return parts.join('|');
+};
+
 const server = http.createServer(async (req, res) => {
     const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const pathname = parsedUrl.pathname;
@@ -399,6 +438,79 @@ const server = http.createServer(async (req, res) => {
             }
         }
 
+        // 8. Update specific HL7 field value in message file
+        if (method === 'POST' && pathname === '/api/update-message-field') {
+            const body = await getBody(req).catch(() => ({}));
+            const {
+                direction,
+                type,
+                vendor,
+                filename,
+                segmentName,
+                segmentIndex,
+                fieldIndex,
+                value,
+            } = body;
+
+            if (!direction || !type || !vendor || !filename || !segmentName) {
+                return sendJSON({ success: false, message: 'Missing required parameters' }, 400);
+            }
+
+            const segIndex = parseInt(segmentIndex, 10);
+            const fldIndex = parseInt(fieldIndex, 10);
+            if (!Number.isInteger(segIndex) || segIndex < 0 || !Number.isInteger(fldIndex) || fldIndex < 1) {
+                return sendJSON({ success: false, message: 'Invalid segmentIndex or fieldIndex' }, 400);
+            }
+
+            const vendorFilePath = path.join(MESSAGES_DIR, direction, type, vendor, `${filename}.hl7`);
+            const rootTypeFilePath = path.join(MESSAGES_DIR, direction, type, `${filename}.hl7`);
+
+            let filePath = vendorFilePath;
+            let content;
+            try {
+                content = await fs.readFile(filePath, 'utf-8');
+            } catch {
+                filePath = rootTypeFilePath;
+                try {
+                    content = await fs.readFile(filePath, 'utf-8');
+                } catch (err) {
+                    console.error(`Failed to read HL7 for update ${vendorFilePath} or ${rootTypeFilePath}:`, err);
+                    return sendJSON({ success: false, message: 'Message not found', error: err.message }, 404);
+                }
+            }
+
+            try {
+                const lineBreak = getLineBreak(content);
+                const trailingBreak = hasTrailingLineBreak(content);
+                const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                const segments = normalized.split('\n').filter(s => s.length > 0);
+
+                if (segIndex >= segments.length) {
+                    return sendJSON({ success: false, message: 'Segment index out of range' }, 400);
+                }
+
+                segments[segIndex] = updateSegmentFieldValue(
+                    segments[segIndex],
+                    segmentName,
+                    fldIndex,
+                    value
+                );
+
+                const updatedContent = segments.join(lineBreak) + (trailingBreak ? lineBreak : '');
+                await fs.writeFile(filePath, updatedContent, 'utf-8');
+
+                return sendJSON({
+                    success: true,
+                    message: `Updated ${segmentName}.${fldIndex} in ${filename}.hl7`,
+                    segmentIndex: segIndex,
+                    fieldIndex: fldIndex,
+                });
+            } catch (err) {
+                console.error('Failed to update HL7 field value:', err);
+                return sendJSON({ success: false, message: err.message || 'Failed to update field value' }, 500);
+            }
+        }
+
         // 404 Catch-all
         console.warn(`[404] No handler for: ${method} "${pathname}"`);
         const availableRoutes = [
@@ -408,7 +520,8 @@ const server = http.createServer(async (req, res) => {
             'GET /api/inventory',
             'POST /api/save-message',
             'POST /api/get-hl7',
-            'POST /api/delete-message'
+            'POST /api/delete-message',
+            'POST /api/update-message-field'
         ];
         sendJSON({
             success: false,

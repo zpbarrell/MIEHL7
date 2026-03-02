@@ -57,6 +57,28 @@
     color: var(--text-primary);
 }
 
+.hl7-viewer__export-btn {
+    border: 1px solid var(--surface-border);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    font-size: var(--font-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.hl7-viewer__export-btn:hover:not(:disabled) {
+    background: var(--bg-card-hover);
+    border-color: var(--surface-border-hover);
+}
+
+.hl7-viewer__export-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
 .hl7-viewer__message-type code {
     font-size: var(--font-sm);
     font-weight: 600;
@@ -132,4 +154,37 @@
     max-height: 65vh;
     overflow-y: auto;
     overflow-x: hidden;
+}
+
+.hl7-viewer__export-menu {
+    position: relative;
+}
+
+.hl7-viewer__export-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 150px;
+    background: var(--bg-card);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    z-index: 20;
+}
+
+.hl7-viewer__export-option {
+    display: block;
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    text-align: left;
+    padding: 8px 10px;
+    font-size: var(--font-xs);
+    cursor: pointer;
+}
+
+.hl7-viewer__export-option:hover {
+    background: var(--bg-card-hover);
 }

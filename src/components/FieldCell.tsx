@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, memo } from 'react';
-import type { ParsedField, HL7Flow } from '../lib/types';
+import type { ParsedField, HL7Flow, MessageContext } from '../lib/types';
 import { isEmrConfigurable, getFieldLabel } from '../lib/field-dictionary';
 import { FieldTooltip } from './FieldTooltip';
 import './FieldCell.css';
@@ -7,11 +7,14 @@ import './FieldCell.css';
 interface FieldCellProps {
     field: ParsedField;
     segmentName: string;
+    segmentIndex: number;
     fieldIndex: number;
     flow: HL7Flow;
+    messageContext: MessageContext;
+    onMessageFieldUpdated: () => void;
 }
 
-export const FieldCell = memo(function FieldCell({ field, segmentName, fieldIndex, flow }: FieldCellProps) {
+export const FieldCell = memo(function FieldCell({ field, segmentName, segmentIndex, fieldIndex, flow, messageContext, onMessageFieldUpdated }: FieldCellProps) {
     const [showTooltip, setShowTooltip] = useState(false);
     const [isPinned, setIsPinned] = useState(false);
     const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
@@ -133,12 +136,15 @@ export const FieldCell = memo(function FieldCell({ field, segmentName, fieldInde
                 <FieldTooltip
                     field={field}
                     segmentName={segmentName}
+                    segmentIndex={segmentIndex}
                     fieldIndex={fieldIndex}
                     flow={flow}
+                    messageContext={messageContext}
                     anchorRect={anchorRect}
                     isPinned={isPinned}
                     onHoverStart={handleTooltipHoverStart}
                     onHoverEnd={handleTooltipHoverEnd}
+                    onMessageFieldUpdated={onMessageFieldUpdated}
                     onClose={handleTooltipClose}
                 />
             )}

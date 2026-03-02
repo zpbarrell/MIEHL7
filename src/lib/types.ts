@@ -29,6 +29,13 @@ export interface ParsedMessage {
 
 export type HL7Flow = 'Inbound' | 'Outbound';
 
+export interface MessageContext {
+  direction: HL7Flow;
+  type: string;
+  vendor: string;
+  filename: string;
+}
+
 // Field Dictionary Structures
 
 export interface ComponentDefinition {

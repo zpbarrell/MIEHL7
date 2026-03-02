@@ -1,22 +1,26 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import type { ParsedField, HL7Flow } from '../lib/types';
-import { getFieldDefinition, getComponentDefinition, isEmrConfigurable, getEmrConfig, getSegmentDefinition, saveFieldUpdate, saveEmrUpdate } from '../lib/field-dictionary';
+import type { ParsedField, HL7Flow, MessageContext } from '../lib/types';
+import { getFieldDefinition, getComponentDefinition, isEmrConfigurable, getEmrConfig, getSegmentDefinition, saveFieldUpdate, saveEmrUpdate, saveMessageFieldValue } from '../lib/field-dictionary';
 import './FieldTooltip.css';
 
 interface FieldTooltipProps {
     field: ParsedField;
     segmentName: string;
+    segmentIndex: number;
     fieldIndex: number;
     flow: HL7Flow;
+    messageContext: MessageContext;
     anchorRect: DOMRect;
     isPinned: boolean;
     onHoverStart?: () => void;
     onHoverEnd?: () => void;
+    onMessageFieldUpdated?: () => void;
     onClose: () => void;
 }
 
 interface EditableFields {
+    currentValue: string;
     name: string;
     description: string;
     emrLocation: string;
@@ -26,11 +30,14 @@ interface EditableFields {
 export const FieldTooltip: React.FC<FieldTooltipProps> = ({
     field,
     segmentName,
+    segmentIndex,
     fieldIndex,
     flow,
+    messageContext,
     anchorRect,
     onHoverStart,
     onHoverEnd,
+    onMessageFieldUpdated,
     onClose,
     isPinned = false
 }) => {
@@ -50,6 +57,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
     const emrConfigurable = localEmrEnabled || isEmrConfigurable(field.position, flow);
 
     const [editFields, setEditFields] = useState<EditableFields & { imagePaths: string[] }>({
+        currentValue: field.value || '',
         name: fieldDef?.name || '',
         description: fieldDef?.description || '',
         emrLocation: localEmrConfig?.emrLocation || '',
@@ -294,6 +302,14 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
         e.stopPropagation();
         setIsSaving(true);
         try {
+            const messageValueRes = await saveMessageFieldValue(
+                messageContext,
+                segmentName,
+                segmentIndex,
+                fieldIndex,
+                editFields.currentValue
+            );
+
             // 1. Save Field Definition updates
             const fieldRes = await saveFieldUpdate(segmentName, fieldIndex, editFields.name, editFields.description);
 
@@ -306,12 +322,13 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
                 enabled: localEmrEnabled
             });
 
-            if (fieldRes.success && emrRes.success) {
+            if (messageValueRes.success && fieldRes.success && emrRes.success) {
                 // Sync state with saved data
                 const savedEmr = emrRes.data;
                 if (savedEmr) {
                     const nextEnabled = savedEmr.enabled ?? localEmrEnabled;
                     setEditFields({
+                        currentValue: editFields.currentValue,
                         name: savedEmr.fieldName || '',
                         description: editFields.description,
                         emrLocation: savedEmr.emrLocation || '',
@@ -324,8 +341,9 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
                     });
                 }
                 setIsEditing(false);
+                onMessageFieldUpdated?.();
             } else {
-                const errorMsg = fieldRes.message || emrRes.message || 'Unknown server error';
+                const errorMsg = messageValueRes.message || fieldRes.message || emrRes.message || 'Unknown server error';
                 alert(`Failed to save updates: ${errorMsg}`);
             }
         } catch (err: any) {
@@ -340,6 +358,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
         e.stopPropagation();
         // Reset to original values
         setEditFields({
+            currentValue: field.value || '',
             name: fieldDef?.name || '',
             description: fieldDef?.description || '',
             emrLocation: localEmrConfig?.emrLocation || '',
@@ -443,9 +462,18 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
             {/* Value */}
             <div className="field-tooltip__section">
                 <div className="field-tooltip__section-label">Current Value</div>
-                <div className="field-tooltip__value">
-                    <code>{field.value || '(empty)'}</code>
-                </div>
+                {isEditing ? (
+                    <input
+                        className="field-tooltip__edit-input"
+                        value={editFields.currentValue}
+                        onChange={(e) => setEditFields(prev => ({ ...prev, currentValue: e.target.value }))}
+                        placeholder="Field value"
+                    />
+                ) : (
+                    <div className="field-tooltip__value">
+                        <code>{field.value || '(empty)'}</code>
+                    </div>
+                )}
             </div>
 
             {/* Description */}
