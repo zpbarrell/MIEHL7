@@ -8,6 +8,14 @@ import { ImportModal } from './components/ImportModal';
 import './App.css';
 
 type Inventory = Record<string, Record<string, Record<string, string[]>>>;
+type ThemeMode = 'light' | 'dark';
+const THEME_STORAGE_KEY = 'miehl7-theme-mode';
+
+function getInitialThemeMode(): ThemeMode {
+  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  if (stored === 'light' || stored === 'dark') return stored;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
 
 function hasMessageInInventory(
   inv: Inventory,
@@ -44,6 +52,12 @@ function App() {
   const [activeMessage, setActiveMessage] = useState<ParsedMessage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [importingFile, setImportingFile] = useState<{ content: string; name: string } | null>(null);
+  const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', themeMode);
+    localStorage.setItem(THEME_STORAGE_KEY, themeMode);
+  }, [themeMode]);
 
   // Load inventory on mount
   useEffect(() => {
@@ -276,6 +290,10 @@ function App() {
     [activeMessage]
   );
 
+  const toggleTheme = useCallback(() => {
+    setThemeMode((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  }, []);
+
   return (
     <div className="app-container">
       {/* Header */}
@@ -301,6 +319,16 @@ function App() {
             Fields: <span className="app-header__stat-value">{totalFields}</span>
           </div>
         </div>
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={toggleTheme}
+          aria-label={`Switch to ${themeMode === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${themeMode === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          <span className="theme-toggle__icon" aria-hidden="true">{themeMode === 'dark' ? '☀️' : '🌙'}</span>
+          <span className="theme-toggle__label">{themeMode === 'dark' ? 'Light' : 'Dark'} Mode</span>
+        </button>
       </header>
 
       {/* Drop zone */}
