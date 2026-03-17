@@ -3,12 +3,14 @@ import './DropZone.css';
 
 interface DropZoneProps {
     onFilesDropped: (files: File[]) => void;
+    onPastedHL7: (content: string) => void;
     isLoading?: boolean;
 }
 
-export function DropZone({ onFilesDropped, isLoading }: DropZoneProps) {
+export function DropZone({ onFilesDropped, onPastedHL7, isLoading }: DropZoneProps) {
     const [isDragOver, setIsDragOver] = useState(false);
     const [dragCount, setDragCount] = useState(0);
+    const [pastedContent, setPastedContent] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -69,6 +71,18 @@ export function DropZone({ onFilesDropped, isLoading }: DropZoneProps) {
         }
     }, [onFilesDropped]);
 
+    const handlePasteSubmit = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        const trimmed = pastedContent.trim();
+        if (!trimmed) return;
+        onPastedHL7(trimmed);
+        setPastedContent('');
+    }, [onPastedHL7, pastedContent]);
+
+    const handlePasteAreaClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+    }, []);
+
     return (
         <div
             className={`dropzone glass-card ${isDragOver ? 'dropzone--active' : ''} ${isLoading ? 'dropzone--loading' : ''}`}
@@ -105,6 +119,28 @@ export function DropZone({ onFilesDropped, isLoading }: DropZoneProps) {
                             Drag & drop <code>.hl7</code> files here
                         </p>
                         <p className="dropzone__hint">or click to browse</p>
+
+                        <div className="dropzone__paste" onClick={handlePasteAreaClick}>
+                            <label className="dropzone__paste-label" htmlFor="hl7-paste-input">
+                                Or paste HL7 segments/message text
+                            </label>
+                            <textarea
+                                id="hl7-paste-input"
+                                className="dropzone__paste-input"
+                                placeholder="MSH|^~\&|...\nPID|...\nOBR|..."
+                                value={pastedContent}
+                                onChange={(e) => setPastedContent(e.target.value)}
+                                disabled={isLoading}
+                            />
+                            <button
+                                type="button"
+                                className="dropzone__paste-btn"
+                                onClick={handlePasteSubmit}
+                                disabled={isLoading || !pastedContent.trim()}
+                            >
+                                Import Pasted HL7
+                            </button>
+                        </div>
                     </>
                 )}
             </div>

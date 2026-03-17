@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './ImportModal.css';
 
 interface ImportModalProps {
     fileContent: string;
     fileName: string;
     existingVendors: string[];
+    suggestedMessageType?: string;
     onSave: (direction: string, vendor: string, type: string, label: string) => void;
     onCancel: () => void;
     isLoading?: boolean;
@@ -12,13 +13,21 @@ interface ImportModalProps {
 
 const MESSAGE_TYPES = ['ORM', 'ORU', 'ADT', 'SIU', 'DFT', 'MDM', 'MFN'];
 
-export function ImportModal({ fileContent, fileName, existingVendors, onSave, onCancel, isLoading }: ImportModalProps) {
+export function ImportModal({ fileContent, fileName, existingVendors, suggestedMessageType, onSave, onCancel, isLoading }: ImportModalProps) {
     const [direction, setDirection] = useState('Inbound');
     const [vendor, setVendor] = useState('Default');
     const [isNewVendor, setIsNewVendor] = useState(false);
     const [newVendorName, setNewVendorName] = useState('');
     const [messageType, setMessageType] = useState('ORM');
     const [label, setLabel] = useState('');
+
+    useEffect(() => {
+        if (!suggestedMessageType) return;
+        const normalized = suggestedMessageType.toUpperCase();
+        if (MESSAGE_TYPES.includes(normalized)) {
+            setMessageType(normalized);
+        }
+    }, [suggestedMessageType]);
 
     const handleSave = () => {
         const finalVendor = isNewVendor ? newVendorName.trim() : vendor;

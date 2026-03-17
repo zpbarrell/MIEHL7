@@ -11,6 +11,7 @@ import './App.css';
 type Inventory = Record<string, Record<string, Record<string, string[]>>>;
 type ThemeMode = 'light' | 'dark';
 const THEME_STORAGE_KEY = 'miehl7-theme-mode';
+const SUPPORTED_MESSAGE_TYPES = new Set(['ORM', 'ORU', 'ADT', 'SIU', 'DFT', 'MDM', 'MFN']);
 
 function getInitialThemeMode(): ThemeMode {
   const stored = localStorage.getItem(THEME_STORAGE_KEY);
@@ -26,6 +27,18 @@ function hasMessageInInventory(
   filename: string
 ): boolean {
   return Boolean(inv?.[direction]?.[type]?.[vendor]?.includes(filename));
+}
+
+function detectMessageTypeFromHL7(content: string): string | null {
+  const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const mshLine = normalized.split('\n').find(line => line.startsWith('MSH|'));
+  if (!mshLine) return null;
+
+  const fields = mshLine.split('|');
+  const msh9 = fields[8] || '';
+  const primaryType = msh9.split('^')[0]?.trim().toUpperCase();
+  if (!primaryType || !SUPPORTED_MESSAGE_TYPES.has(primaryType)) return null;
+  return primaryType;
 }
 
 /** Find the first available message in an inventory, preferring Inbound. */
@@ -54,6 +67,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [importingFile, setImportingFile] = useState<{ content: string; name: string } | null>(null);
+  const [suggestedImportMessageType, setSuggestedImportMessageType] = useState<string | undefined>(undefined);
   const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode);
 
   useEffect(() => {
@@ -166,8 +180,18 @@ function App() {
     reader.onload = (e) => {
       const content = e.target?.result as string;
       setImportingFile({ content, name: file.name });
+      const detectedType = detectMessageTypeFromHL7(content) || undefined;
+      setSuggestedImportMessageType(detectedType);
     };
     reader.readAsText(file);
+  }, []);
+
+  const handlePastedHL7 = useCallback((content: string) => {
+    const firstSegment = content.split(/\r\n|\n|\r/).find(line => line.trim().length > 0)?.slice(0, 3) || 'HL7';
+    const name = `Pasted_${firstSegment}_${new Date().toISOString().replace(/[.:]/g, '-')}.hl7`;
+    setImportingFile({ content, name });
+    const detectedType = detectMessageTypeFromHL7(content) || undefined;
+    setSuggestedImportMessageType(detectedType);
   }, []);
 
   const handleModalSave = async (direction: string, vendor: string, type: string, label: string) => {
@@ -189,6 +213,7 @@ function App() {
       const data = await res.json();
       if (data.success) {
         setImportingFile(null);
+        setSuggestedImportMessageType(undefined);
         const safeLabel = label.trim().replace(/[^a-z0-9 _-]/gi, '') || `Imported ${new Date().toLocaleDateString().replace(/\//g, '-')}`;
         await loadInventory({ direction: normalizedDirection, type, vendor, filename: safeLabel });
       } else {
@@ -369,7 +394,7 @@ function App() {
       </header>
 
       {/* Drop zone */}
-      <DropZone onFilesDropped={handleFilesDropped} isLoading={isLoading} />
+      <DropZone onFilesDropped={handleFilesDropped} onPastedHL7={handlePastedHL7} isLoading={isLoading} />
 
       {/* Message selector */}
       <MessageSelector
@@ -416,6 +441,10 @@ function App() {
                 <span className="app-welcome__feature-icon">📂</span>
                 <span>Drag & drop .hl7 file import</span>
               </div>
+              <div className="app-welcome__feature">
+                <span className="app-welcome__feature-icon">📋</span>
+                <span>Paste HL7 text directly into import</span>
+              </div>
             </div>
           </div>
         </div>
@@ -439,8 +468,12 @@ function App() {
           fileContent={importingFile.content}
           fileName={importingFile.name}
           existingVendors={Object.keys(inventory)}
+          suggestedMessageType={suggestedImportMessageType}
           onSave={handleModalSave}
-          onCancel={() => setImportingFile(null)}
+          onCancel={() => {
+            setImportingFile(null);
+            setSuggestedImportMessageType(undefined);
+          }}
           isLoading={isLoading}
         />
       )}

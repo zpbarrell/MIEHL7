@@ -75,6 +75,71 @@
     color: var(--text-muted);
 }
 
+.dropzone__paste {
+    width: min(680px, 100%);
+    margin-top: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+}
+
+.dropzone__paste-label {
+    text-align: left;
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+}
+
+.dropzone__paste-input {
+    min-height: 120px;
+    resize: vertical;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.25);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.45;
+    padding: var(--space-3);
+}
+
+.dropzone__paste-input:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35);
+}
+
+.dropzone__paste-btn {
+    align-self: flex-end;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    background: var(--accent-blue);
+    color: #fff;
+    font-size: var(--font-sm);
+    font-weight: 600;
+    padding: var(--space-2) var(--space-4);
+    cursor: pointer;
+    transition: background var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.dropzone__paste-btn:hover {
+    background: #5077ff;
+    transform: translateY(-1px);
+}
+
+.dropzone__paste-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* Spinner */
 .dropzone__spinner {
     width: 24px;
