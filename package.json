@@ -8,6 +8,8 @@
     "dev:frontend": "vite",
     "sidecar": "node server.mjs",
     "build": "tsc -b && vite build",
+    "start": "node server.mjs",
+    "start:prod": "npm run build && npm run start",
     "lint": "eslint .",
     "preview": "vite preview"
   },

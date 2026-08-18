@@ -9,33 +9,33 @@ function stripExtension(name: string): string {
     return name.replace(/\.[^.]+$/, '');
 }
 
-function buildFieldComment(
+function getComponentsSummary(
     segmentName: string,
     fieldIndex: number,
-    position: string,
-    flow: HL7Flow
+    field: ParsedMessage['segments'][number]['fields'][number]
 ): string {
-    const segmentDef = getSegmentDefinition(segmentName);
+    const fieldDef = getFieldDefinition(segmentName, fieldIndex);
+    if (!fieldDef?.components?.length) return '';
+
+    return field.components
+        .map((component, index) => {
+            const componentDef = fieldDef.components?.find(definition => definition.position === index + 1);
+            const componentName = componentDef?.name || `Component ${index + 1}`;
+            return `${component.position}: ${componentName} = ${component.value || '(empty)'}`;
+        })
+        .join('\n');
+}
+
+function getFieldNotes(segmentName: string, fieldIndex: number, position: string, flow: HL7Flow): string {
     const fieldDef = getFieldDefinition(segmentName, fieldIndex);
     const emrConfig = getEmrConfig(position, flow);
-    const emrEnabled = isEmrConfigurable(position, flow);
+    const notes: string[] = [];
 
-    const lines: string[] = [
-        `Position: ${position}`,
-        `Segment: ${segmentDef?.name || segmentName}`,
-        `Field: ${fieldDef?.name || `Field ${fieldIndex}`}`,
-        `Required: ${fieldDef?.required ? 'Yes' : 'No'}`,
-    ];
+    if (fieldDef?.description) notes.push(fieldDef.description);
+    if (emrConfig?.emrLocation) notes.push(`EMR Location: ${emrConfig.emrLocation}`);
+    if (emrConfig?.notes) notes.push(`EMR Notes: ${emrConfig.notes}`);
 
-    if (fieldDef?.dataType) lines.push(`Data Type: ${fieldDef.dataType}`);
-    if (fieldDef?.maxLength) lines.push(`Max Length: ${fieldDef.maxLength}`);
-    if (fieldDef?.description) lines.push(`Description: ${fieldDef.description}`);
-
-    lines.push(`EMR Configurable: ${emrEnabled ? 'Yes' : 'No'}`);
-    if (emrConfig?.emrLocation) lines.push(`EMR Location: ${emrConfig.emrLocation}`);
-    if (emrConfig?.notes) lines.push(`EMR Notes: ${emrConfig.notes}`);
-
-    return lines.join('\n');
+    return notes.join('\n');
 }
 
 export async function exportMessageAsXlsx(
@@ -45,7 +45,82 @@ export async function exportMessageAsXlsx(
 ): Promise<void> {
     const { Workbook } = await import('exceljs');
     const workbook = new Workbook();
+    const mappingWorksheet = workbook.addWorksheet('HL7 Mapping');
     const worksheet = workbook.addWorksheet('HL7 Message');
+
+    const mappingHeader = [
+        'Segment',
+        'Position',
+        'Segment Name',
+        'Components',
+        'Supported',
+        'Required',
+        'EMR Configurable',
+        'Data Type',
+        'Max Length',
+        'Notes',
+    ];
+    mappingWorksheet.addRow(mappingHeader);
+
+    const mappingHeaderRow = mappingWorksheet.getRow(1);
+    mappingHeaderRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    mappingHeaderRow.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    mappingHeaderRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF1F2937' },
+    };
+
+    message.segments.forEach((segment, segmentIndex) => {
+        for (let fieldIndex = 1; fieldIndex < segment.fields.length; fieldIndex += 1) {
+            const field = segment.fields[fieldIndex];
+            const fieldDef = getFieldDefinition(segment.name, fieldIndex);
+            const position = field.position;
+            const emrEnabled = isEmrConfigurable(position, flow);
+            const mappingRow = mappingWorksheet.addRow([
+                segment.name,
+                position,
+                getSegmentDefinition(segment.name)?.name || segment.name,
+                getComponentsSummary(segment.name, fieldIndex, field),
+                fieldDef ? 'Yes' : 'No',
+                fieldDef ? (fieldDef.required ? 'Yes' : 'No') : 'Unknown',
+                emrEnabled ? 'Yes' : 'No',
+                fieldDef?.dataType || '',
+                fieldDef?.maxLength ?? '',
+                getFieldNotes(segment.name, fieldIndex, position, flow),
+            ]);
+
+            mappingRow.alignment = { vertical: 'top', wrapText: true };
+            if (emrEnabled) {
+                mappingRow.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFFDE68A' },
+                };
+            }
+            mappingRow.getCell(1).font = { bold: true };
+            mappingRow.getCell(2).font = { bold: true };
+            mappingRow.getCell(4).note = `Segment Index: ${segmentIndex}\nField Value: ${field.value || '(empty)'}`;
+        }
+    });
+
+    mappingWorksheet.autoFilter = {
+        from: 'A1',
+        to: `J${mappingWorksheet.rowCount}`,
+    };
+    mappingWorksheet.views = [{ state: 'frozen', ySplit: 1 }];
+    mappingWorksheet.columns = [
+        { width: 12 },
+        { width: 14 },
+        { width: 28 },
+        { width: 42 },
+        { width: 12 },
+        { width: 12 },
+        { width: 18 },
+        { width: 14 },
+        { width: 14 },
+        { width: 60 },
+    ];
 
     const maxFieldCount = Math.max(
         0,
@@ -75,8 +150,18 @@ export async function exportMessageAsXlsx(
             const field = segment.fields[fieldIndex];
             const colIndex = fieldIndex + 1;
             const cell = row.getCell(colIndex);
-            const comment = buildFieldComment(segment.name, fieldIndex, field.position, flow);
-            cell.note = comment;
+            const fieldDef = getFieldDefinition(segment.name, fieldIndex);
+            cell.note = [
+                `Position: ${field.position}`,
+                `Segment: ${getSegmentDefinition(segment.name)?.name || segment.name}`,
+                `Field: ${fieldDef?.name || `Field ${fieldIndex}`}`,
+                `Supported: ${fieldDef ? 'Yes' : 'No'}`,
+                `Required: ${fieldDef ? (fieldDef.required ? 'Yes' : 'No') : 'Unknown'}`,
+                `EMR Configurable: ${isEmrConfigurable(field.position, flow) ? 'Yes' : 'No'}`,
+                `Data Type: ${fieldDef?.dataType || 'Unknown'}`,
+                `Max Length: ${fieldDef?.maxLength ?? 'Unknown'}`,
+                `Notes: ${getFieldNotes(segment.name, fieldIndex, field.position, flow) || 'None'}`,
+            ].join('\n');
 
             if (isEmrConfigurable(field.position, flow)) {
                 cell.fill = {

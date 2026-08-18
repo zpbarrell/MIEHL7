@@ -74,6 +74,17 @@ export interface EmrConfigEntry {
   enabled?: boolean;
 }
 
+export interface SegmentEmrConfigEntry {
+  segment: string;          // e.g. "PID"
+  flow?: HL7Flow;
+  segmentName: string;
+  emrLocation: string;
+  imagePaths: string[];
+  notes?: string;
+  enabled?: boolean;
+}
+
 export interface EmrConfigData {
   entries: EmrConfigEntry[];
+  segmentEntries?: SegmentEmrConfigEntry[];
 }

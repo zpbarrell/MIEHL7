@@ -23,7 +23,7 @@
       "field": 3,
       "name": "Sending Application",
       "dataType": "ST",
-      "description": "Sending application.",
+      "description": "Sending application.\nHas to be set to MESA_OF, OF_SMSALL, or CERNER_OP",
       "maxLength": 15
     },
     {

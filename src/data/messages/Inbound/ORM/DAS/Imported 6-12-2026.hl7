@@ -1,0 +1,8 @@
+MSH|^~\&|NHIN DAS SEND|ESHORE|NHIN DAS RECEIVE|recv_facil|20260612135400||ORM^O01^ORM_O01|DSD1781272440850188|P|2.5|||||||||||||
+PID|1|16|16^^^VISN2MNL&1.2.840.114398.1.668.2&ISO^MR||Jersey^Jeffrey^^^^^L||19800101000000|M|||^^^VA^12345^US||^PRN^PH^matthew.panzica@va.gov||||||123456048||||||||||||||||||||
+PV1|1||^^^ESHORE||||265^PROVIDERVISN1^PATRICK|||||||||||||||||||||||||||||||||||||||||||^^^^^1.2.840.114398.1.7815.1||
+IN1|1||||||||||||||||||||||||||||||||||||||||||||||C||
+ORC|NW|186|||Pending||^^^^^0||20260612095354|633108^BARRELL^ZACHARY||633108^BARRELL^ZACHARY|^^^^vha_655^^^^^Aleda E. Lutz Department of Veterans Affairs Medical Center|^^^ZACHARY.BARRELL@va.gov|||vha_655||||Aleda E. Lutz Department of Veterans Affairs Medical Center|1500 Weiss Street^^Saginaw^MI^48602-5251^US|(989) 497-2500||||||||
+OBR|1|186||81132.0000^519 LIPID PANEL^GMRC|0|20260612095354|20260612095300|||||||||633108^BARRELL^ZACHARY||||||||||||ESIG12345||||||||||||||||||||||
+OBX|1|ST|51901||BLOOD- GOLD TOP TUBE||||||||||||||||||||
+OBX|2|ST|51924||SERUM||||||||||||||||||||

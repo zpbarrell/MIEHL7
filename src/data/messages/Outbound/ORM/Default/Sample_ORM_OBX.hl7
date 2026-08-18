@@ -1,0 +1,9 @@
+MSH|^~\&|WCDataSend|DEV|wc_hl7d|recv_facil|20210413152312||ORM^O01^ORM_O01|DSD1618345392293653|P|2.5|||||||||||||
+PID|1|10018|10018^^^MR&1.2.840.114398.1.6629.1&ISO^MR||Test^AEL^^^^^L||20210413000000||||123 Main Street^^Schenectady^NY^12345^US^^^Schenectady||^PRN^PH|^WPN^PH|||||||||||||||||||||||||
+PV1|1||^^^FREELM|||||||||||||||||||||||||||||||||||||||||||||||^^^^^1.2.840.114398.1.6629||
+IN1|1||||||||||||||||||||||||||||||||||||||||||||||C||
+ORC|NW|22|||Pending||\E\S\E\\E\S\E\\E\S\E\\E\S\E\\E\S\E\0||20210413152252|89^Medical Informatics Engineering^MIE||8^Freeman^Lucius^B^^^MD|^^^^OFFICE^^^^^Freeman Family Medicine, Lucius B Freeman, M.D.||||OFFICE||||Freeman Family Medicine, Lucius B Freeman, M.D.|645 McQueen Smith Rd^North Suite 105^Prattville^AL^36066^US|3343617656|645 McQueen Smith Rd^North Suite 105^Prattville^AL^36066|||||||
+OBR|1|22||E693^PORPHOBILINOGEN (PBG) URINE - AEL|0|20210413152252|20210413161900|||||||||8^Freeman^Lucius^B^^^MD||||||||||||||||||||||||||||||||||
+DG1|1|ICD|R05^COUGH^I10|COUGH||||||||||||
+OBX|1|NM|C6806^HOURS COLLECTED||0.25||||||||||||||||||||
+OBX|2|NM|C6804^TOTAL VOLUME||4||||||||||||||||||||

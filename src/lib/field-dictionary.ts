@@ -1,4 +1,4 @@
-import type { FieldDefinition, ComponentDefinition, EmrConfigEntry, SegmentDefinitions, HL7Flow, MessageContext } from './types';
+import type { FieldDefinition, ComponentDefinition, EmrConfigEntry, SegmentDefinitions, SegmentEmrConfigEntry, HL7Flow, MessageContext, EmrConfigData } from './types';
 
 // Import all segment definitions (Base defaults)
 import MSH_JSON from '../data/field-definitions/MSH.json';
@@ -22,6 +22,7 @@ import emrConfig_JSON from '../data/emr-config/configurable-fields.json';
 // Build lookup maps (Mutable state)
 const segmentMap = new Map<string, SegmentDefinitions>();
 const emrConfigMap = new Map<string, EmrConfigEntry>();
+const segmentEmrConfigMap = new Map<string, SegmentEmrConfigEntry>();
 
 function normalizeFlow(flow?: HL7Flow): HL7Flow {
     return flow === 'Inbound' ? 'Inbound' : 'Outbound';
@@ -29,6 +30,10 @@ function normalizeFlow(flow?: HL7Flow): HL7Flow {
 
 function getEmrKey(position: string, flow?: HL7Flow): string {
     return `${normalizeFlow(flow)}::${position}`;
+}
+
+function getSegmentEmrKey(segmentName: string, flow?: HL7Flow): string {
+    return `${normalizeFlow(flow)}::${segmentName}`;
 }
 
 function isEntryEnabled(entry?: EmrConfigEntry): boolean {
@@ -56,12 +61,22 @@ allSegments.forEach(seg => {
     segmentMap.set(seg.segment, seg as SegmentDefinitions);
 });
 
-emrConfig_JSON.entries.forEach(entry => {
+const emrConfigData = emrConfig_JSON as EmrConfigData;
+
+emrConfigData.entries.forEach(entry => {
     const normalized = {
         ...(entry as EmrConfigEntry),
         flow: normalizeFlow((entry as EmrConfigEntry).flow)
     };
     emrConfigMap.set(getEmrKey(normalized.fieldPosition, normalized.flow), normalized);
+});
+
+(emrConfigData.segmentEntries || []).forEach(entry => {
+    const normalized = {
+        ...(entry as SegmentEmrConfigEntry),
+        flow: normalizeFlow((entry as SegmentEmrConfigEntry).flow)
+    };
+    segmentEmrConfigMap.set(getSegmentEmrKey(normalized.segment, normalized.flow), normalized);
 });
 
 /**
@@ -123,6 +138,15 @@ export function getEmrConfig(position: string, flow?: HL7Flow): EmrConfigEntry |
         return emrConfigMap.get(getEmrKey(parentPosition, resolvedFlow));
     }
     return undefined;
+}
+
+export function getSegmentEmrConfig(segmentName: string, flow?: HL7Flow): SegmentEmrConfigEntry | undefined {
+    return segmentEmrConfigMap.get(getSegmentEmrKey(segmentName, flow));
+}
+
+export function hasSegmentEmrConfig(segmentName: string, flow?: HL7Flow): boolean {
+    const entry = getSegmentEmrConfig(segmentName, flow);
+    return !!entry && entry.enabled !== false;
 }
 
 /**
@@ -232,6 +256,51 @@ export async function deleteEmrUpdate(position: string, flow: HL7Flow) {
     }
 }
 
+export async function saveSegmentEmrUpdate(segment: string, flow: HL7Flow, data: Partial<SegmentEmrConfigEntry>) {
+    const resolvedFlow = normalizeFlow(flow);
+    try {
+        const res = await fetch('/api/update-segment-emr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ segment, flow: resolvedFlow, ...data })
+        });
+        const result = await res.json();
+
+        if (result.success && result.data) {
+            const entry = {
+                ...(result.data as SegmentEmrConfigEntry),
+                flow: normalizeFlow((result.data as SegmentEmrConfigEntry).flow || resolvedFlow)
+            };
+            segmentEmrConfigMap.set(getSegmentEmrKey(segment, entry.flow), entry);
+        }
+        return result;
+    } catch (err) {
+        console.error('Failed to save segment EMR update:', err);
+        const error = err instanceof Error ? err.message : String(err);
+        return { success: false, error };
+    }
+}
+
+export async function deleteSegmentEmrUpdate(segment: string, flow: HL7Flow) {
+    const resolvedFlow = normalizeFlow(flow);
+    try {
+        const res = await fetch('/api/delete-segment-emr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ segment, flow: resolvedFlow })
+        });
+        const result = await res.json();
+        if (result.success) {
+            segmentEmrConfigMap.delete(getSegmentEmrKey(segment, resolvedFlow));
+        }
+        return result;
+    } catch (err) {
+        console.error('Failed to delete segment EMR update:', err);
+        const error = err instanceof Error ? err.message : String(err);
+        return { success: false, error };
+    }
+}
+
 export async function saveMessageFieldValue(
     message: MessageContext,
     segmentName: string,
@@ -254,6 +323,21 @@ export async function saveMessageFieldValue(
         return await res.json();
     } catch (err) {
         console.error('Failed to save message field value:', err);
+        const error = err instanceof Error ? err.message : String(err);
+        return { success: false, error };
+    }
+}
+
+export async function anonymizeMessage(message: MessageContext) {
+    try {
+        const res = await fetch('/api/anonymize-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(message)
+        });
+        return await res.json();
+    } catch (err) {
+        console.error('Failed to anonymize message:', err);
         const error = err instanceof Error ? err.message : String(err);
         return { success: false, error };
     }

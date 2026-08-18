@@ -135,7 +135,9 @@
       "fieldName": "Date/Time of Birth",
       "emrLocation": "",
       "imagePaths": [],
-      "notes": ""
+      "notes": "",
+      "flow": "Outbound",
+      "enabled": true
     },
     {
       "fieldPosition": "PID.8",
@@ -215,6 +217,106 @@
       "imagePaths": [],
       "notes": "",
       "enabled": false
+    },
+    {
+      "fieldPosition": "OBX.3",
+      "flow": "Outbound",
+      "fieldName": "Observation Identifier",
+      "emrLocation": "Question Builder UI or Order Question CSV import",
+      "imagePaths": [],
+      "notes": "",
+      "enabled": true
+    },
+    {
+      "fieldPosition": "ORC.5",
+      "flow": "Inbound",
+      "fieldName": "Order Status",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "Sets order to Completed or in Progress",
+      "enabled": true
+    },
+    {
+      "fieldPosition": "ORC.3",
+      "flow": "Inbound",
+      "fieldName": "Filler Order Number",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "",
+      "enabled": true
+    },
+    {
+      "fieldPosition": "ORC.1",
+      "flow": "Inbound",
+      "fieldName": "Order Control Code",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "",
+      "enabled": true
+    },
+    {
+      "fieldPosition": "ORC.7",
+      "flow": "Outbound",
+      "fieldName": "Quantity/Timing",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "",
+      "enabled": true
+    },
+    {
+      "fieldPosition": "PV1.2",
+      "flow": "Inbound",
+      "fieldName": "Patient Class",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "",
+      "enabled": false
+    },
+    {
+      "fieldPosition": "OBR.28",
+      "flow": "Inbound",
+      "fieldName": "Result Copies To",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "",
+      "enabled": false
+    },
+    {
+      "fieldPosition": "OBR.5",
+      "flow": "Inbound",
+      "fieldName": "Priority",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "",
+      "enabled": false
+    },
+    {
+      "fieldPosition": "MSH.4",
+      "flow": "Inbound",
+      "fieldName": "Sending Facility",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "",
+      "enabled": true
+    },
+    {
+      "fieldPosition": "MSH.5",
+      "flow": "Inbound",
+      "fieldName": "Receiving Application",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "",
+      "enabled": true
+    },
+    {
+      "fieldPosition": "MSH.6",
+      "flow": "Inbound",
+      "fieldName": "Receiving Facility",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "",
+      "enabled": true
     }
-  ]
+  ],
+  "segmentEntries": []
 }

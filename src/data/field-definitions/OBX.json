@@ -3,22 +3,126 @@
   "name": "Observation/Result",
   "description": "The OBX segment is used to transmit a single observation or observation fragment.",
   "fields": [
-    { "field": 1, "name": "Set ID", "dataType": "SI", "description": "Set ID.", "maxLength": 4 },
-    { "field": 2, "name": "Value Type", "dataType": "ID", "description": "Value type.", "maxLength": 3 },
-    { "field": 3, "name": "Observation Identifier", "dataType": "CE", "description": "Observation identifier.", "required": true, "maxLength": 80 },
-    { "field": 4, "name": "Observation Sub-Id", "dataType": "ST", "description": "Observation sub-id.", "maxLength": 20 },
-    { "field": 5, "name": "Observation Value", "dataType": "FT", "description": "Observation value.", "maxLength": 65536 },
-    { "field": 6, "name": "Units", "dataType": "CE", "description": "Units.", "maxLength": 60 },
-    { "field": 7, "name": "Reference Range", "dataType": "ST", "description": "Reference range.", "maxLength": 60 },
-    { "field": 8, "name": "Abnormal Flags", "dataType": "ID", "description": "Abnormal flags.", "maxLength": 5 },
-    { "field": 9, "name": "Probability", "dataType": "NM", "description": "Probability.", "maxLength": 5 },
-    { "field": 10, "name": "Nature of Abnormal Test", "dataType": "ID", "description": "Nature of abnormal test.", "maxLength": 2 },
-    { "field": 11, "name": "Observation Result Status", "dataType": "ID", "description": "Observation result status.", "required": true, "maxLength": 1 },
-    { "field": 12, "name": "Date Last Obs Normal Value", "dataType": "TS", "description": "Date last observation normal value.", "maxLength": 26 },
-    { "field": 13, "name": "User Defined Access Checks", "dataType": "ST", "description": "User defined access checks.", "maxLength": 20 },
-    { "field": 14, "name": "Date/Time of the Observation", "dataType": "TS", "description": "Date/time of the observation.", "maxLength": 26 },
-    { "field": 15, "name": "Producer's ID", "dataType": "CE", "description": "Producer's ID.", "maxLength": 60 },
-    { "field": 16, "name": "Responsible Observer", "dataType": "XCN", "description": "Responsible observer.", "maxLength": 80 },
-    { "field": 17, "name": "Observation Method", "dataType": "CE", "description": "Observation method.", "maxLength": 60 }
+    {
+      "field": 1,
+      "name": "Set ID",
+      "dataType": "SI",
+      "description": "Set ID.",
+      "maxLength": 4
+    },
+    {
+      "field": 2,
+      "name": "Value Type",
+      "dataType": "ID",
+      "description": "Value type.",
+      "maxLength": 3
+    },
+    {
+      "field": 3,
+      "name": "Observation Identifier",
+      "dataType": "CE",
+      "description": "Observation identifier.\nQuestion Code^Description",
+      "required": true,
+      "maxLength": 80
+    },
+    {
+      "field": 4,
+      "name": "Observation Sub-Id",
+      "dataType": "ST",
+      "description": "Observation sub-id.",
+      "maxLength": 20
+    },
+    {
+      "field": 5,
+      "name": "Observation Value",
+      "dataType": "FT",
+      "description": "Observation value.",
+      "maxLength": 65536
+    },
+    {
+      "field": 6,
+      "name": "Units",
+      "dataType": "CE",
+      "description": "Units.",
+      "maxLength": 60
+    },
+    {
+      "field": 7,
+      "name": "Reference Range",
+      "dataType": "ST",
+      "description": "Reference range.",
+      "maxLength": 60
+    },
+    {
+      "field": 8,
+      "name": "Abnormal Flags",
+      "dataType": "ID",
+      "description": "Abnormal flags.",
+      "maxLength": 5
+    },
+    {
+      "field": 9,
+      "name": "Probability",
+      "dataType": "NM",
+      "description": "Probability.",
+      "maxLength": 5
+    },
+    {
+      "field": 10,
+      "name": "Nature of Abnormal Test",
+      "dataType": "ID",
+      "description": "Nature of abnormal test.",
+      "maxLength": 2
+    },
+    {
+      "field": 11,
+      "name": "Observation Result Status",
+      "dataType": "ID",
+      "description": "Observation result status.",
+      "required": true,
+      "maxLength": 1
+    },
+    {
+      "field": 12,
+      "name": "Date Last Obs Normal Value",
+      "dataType": "TS",
+      "description": "Date last observation normal value.",
+      "maxLength": 26
+    },
+    {
+      "field": 13,
+      "name": "User Defined Access Checks",
+      "dataType": "ST",
+      "description": "User defined access checks.",
+      "maxLength": 20
+    },
+    {
+      "field": 14,
+      "name": "Date/Time of the Observation",
+      "dataType": "TS",
+      "description": "Date/time of the observation.",
+      "maxLength": 26
+    },
+    {
+      "field": 15,
+      "name": "Producer's ID",
+      "dataType": "CE",
+      "description": "Producer's ID.",
+      "maxLength": 60
+    },
+    {
+      "field": 16,
+      "name": "Responsible Observer",
+      "dataType": "XCN",
+      "description": "Responsible observer.",
+      "maxLength": 80
+    },
+    {
+      "field": 17,
+      "name": "Observation Method",
+      "dataType": "CE",
+      "description": "Observation method.",
+      "maxLength": 60
+    }
   ]
 }

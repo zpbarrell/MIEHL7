@@ -13,10 +13,36 @@ const DEFS_DIR = path.join(DATA_DIR, 'field-definitions');
 const EMR_CONFIG_PATH = path.join(DATA_DIR, 'emr-config', 'configurable-fields.json');
 const IMAGES_DIR = path.join(__dirname, 'public', 'emr-images');
 const MESSAGES_DIR = path.join(DATA_DIR, 'messages');
+const DIST_DIR = path.join(__dirname, 'dist');
 const DEFAULT_VENDOR = 'Default';
+
+const MIME_TYPES = {
+    '.html': 'text/html; charset=utf-8',
+    '.js': 'application/javascript; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.json': 'application/json; charset=utf-8',
+    '.svg': 'image/svg+xml',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.ico': 'image/x-icon',
+    '.txt': 'text/plain; charset=utf-8',
+};
 
 const normalizeFlow = (flow) => (flow === 'Inbound' ? 'Inbound' : 'Outbound');
 const entryFlow = (entry) => normalizeFlow(entry?.flow);
+
+const ensureEmrConfigData = (data) => {
+    if (!Array.isArray(data.entries)) {
+        data.entries = [];
+    }
+    if (!Array.isArray(data.segmentEntries)) {
+        data.segmentEntries = [];
+    }
+    return data;
+};
 
 const getLineBreak = (content) => {
     if (content.includes('\r\n')) return '\r\n';
@@ -25,6 +51,89 @@ const getLineBreak = (content) => {
 };
 
 const hasTrailingLineBreak = (content) => /(\r\n|\n|\r)$/.test(content);
+
+const processImagePaths = async (imagePaths, keyPrefix) => {
+    const finalImagePaths = [];
+
+    if (!Array.isArray(imagePaths)) {
+        return finalImagePaths;
+    }
+
+    for (let index = 0; index < imagePaths.length; index += 1) {
+        const img = imagePaths[index];
+        if (typeof img !== 'string') {
+            continue;
+        }
+
+        if (img.startsWith('data:image/')) {
+            const matches = img.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                const extension = matches[1].split('/')[1] || 'png';
+                const base64Data = matches[2];
+                const fileName = `${keyPrefix}_${Date.now()}_${index}.${extension}`;
+                const fullPath = path.join(IMAGES_DIR, fileName);
+
+                await fs.mkdir(IMAGES_DIR, { recursive: true });
+                await fs.writeFile(fullPath, base64Data, 'base64');
+                finalImagePaths.push(`/emr-images/${fileName}`);
+            }
+            continue;
+        }
+
+        finalImagePaths.push(img);
+    }
+
+    return finalImagePaths;
+};
+
+const cleanupRemovedImages = async (oldImagePaths, nextImagePaths) => {
+    const orphanedImages = oldImagePaths.filter(oldPath => !nextImagePaths.includes(oldPath));
+    for (const orphanPath of orphanedImages) {
+        try {
+            if (orphanPath.startsWith('/emr-images/')) {
+                const fileName = path.basename(orphanPath);
+                const fullPath = path.join(IMAGES_DIR, fileName);
+                await fs.unlink(fullPath);
+            }
+        } catch (err) {
+            console.error(`Failed to delete orphaned image ${orphanPath}:`, err);
+        }
+    }
+};
+
+const cleanupEntryImages = async (imagePaths) => {
+    for (const imgPath of imagePaths || []) {
+        try {
+            if (imgPath.startsWith('/emr-images/')) {
+                const fullPath = path.join(IMAGES_DIR, path.basename(imgPath));
+                await fs.unlink(fullPath);
+            }
+        } catch (err) {
+            console.error(`Failed to cleanup image ${imgPath}:`, err);
+        }
+    }
+};
+
+const resolveSafePath = (baseDir, requestPath) => {
+    const normalizedBase = path.resolve(baseDir);
+    const targetPath = path.resolve(normalizedBase, requestPath.replace(/^\/+/, ''));
+    if (!targetPath.startsWith(normalizedBase)) {
+        return null;
+    }
+    return targetPath;
+};
+
+const sendFile = async (res, filePath, method = 'GET') => {
+    const ext = path.extname(filePath).toLowerCase();
+    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+    const data = await fs.readFile(filePath);
+    res.writeHead(200, { 'Content-Type': contentType });
+    if (method === 'HEAD') {
+        res.end();
+        return;
+    }
+    res.end(data);
+};
 
 const escapeHl7Value = (value = '') =>
     value
@@ -54,6 +163,25 @@ const updateSegmentFieldValue = (segmentRaw, segmentName, fieldIndex, value) => 
         parts.push('');
     }
     parts[targetIndex] = escapeHl7Value(String(value ?? ''));
+    return parts.join('|');
+};
+
+const updateSegmentFieldRaw = (segmentRaw, segmentName, fieldIndex, value) => {
+    const parts = segmentRaw.split('|');
+    const normalizedSegment = String(segmentName || '').trim().toUpperCase();
+    if (parts[0] !== normalizedSegment) {
+        throw new Error(`Segment mismatch: expected ${normalizedSegment}, found ${parts[0]}`);
+    }
+
+    const targetIndex = normalizedSegment === 'MSH' ? fieldIndex - 1 : fieldIndex;
+    if (!Number.isInteger(targetIndex) || targetIndex < 1) {
+        throw new Error('Invalid field index');
+    }
+
+    while (parts.length <= targetIndex) {
+        parts.push('');
+    }
+    parts[targetIndex] = String(value ?? '');
     return parts.join('|');
 };
 
@@ -156,39 +284,13 @@ const server = http.createServer(async (req, res) => {
 
             console.log(`Loading EMR config from: ${EMR_CONFIG_PATH}`);
             const content = await fs.readFile(EMR_CONFIG_PATH, 'utf-8');
-            const data = JSON.parse(content);
+            const data = ensureEmrConfigData(JSON.parse(content));
 
             let entry = data.entries.find(e => e.fieldPosition === position && entryFlow(e) === flow);
 
             // Track old images for potential cleanup
             const oldImagePaths = entry ? [...(entry.imagePaths || [])] : [];
-
-            // Process images. imagePaths will contain a mix of existing paths and new data URLs
-            const finalImagePaths = [];
-
-            if (Array.isArray(imagePaths)) {
-                for (let i = 0; i < imagePaths.length; i++) {
-                    const img = imagePaths[i];
-                    if (img.startsWith('data:image/')) {
-                        console.log(`Processing image ${i + 1} as base64...`);
-                        const matches = img.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
-                        if (matches && matches.length === 3) {
-                            const extension = matches[1].split('/')[1] || 'png';
-                            const base64Data = matches[2];
-                            const fileName = `${position.replace(/\./g, '_')}_${Date.now()}_${i}.${extension}`;
-                            const fullPath = path.join(IMAGES_DIR, fileName);
-
-                            await fs.mkdir(IMAGES_DIR, { recursive: true });
-                            await fs.writeFile(fullPath, base64Data, 'base64');
-                            finalImagePaths.push(`/emr-images/${fileName}`);
-                            console.log(`Image saved to: ${fullPath}`);
-                        }
-                    } else {
-                        // Existing path
-                        finalImagePaths.push(img);
-                    }
-                }
-            }
+            const finalImagePaths = await processImagePaths(imagePaths, position.replace(/\./g, '_'));
 
             if (!entry) {
                 console.log(`Creating NEW EMR entry for ${flow} ${position}`);
@@ -224,21 +326,7 @@ const server = http.createServer(async (req, res) => {
             await fs.writeFile(EMR_CONFIG_PATH, JSON.stringify(data, null, 2));
             console.log(`Successfully updated EMR config for ${position}`);
 
-            // Cleanup orphaned image files
-            const orphanedImages = oldImagePaths.filter(oldPath => !finalImagePaths.includes(oldPath));
-            for (const orphanPath of orphanedImages) {
-                try {
-                    // Safety check: Ensure path starts with /emr-images/
-                    if (orphanPath.startsWith('/emr-images/')) {
-                        const fileName = path.basename(orphanPath);
-                        const fullPath = path.join(IMAGES_DIR, fileName);
-                        await fs.unlink(fullPath);
-                        console.log(`Deleted orphaned image: ${fullPath}`);
-                    }
-                } catch (err) {
-                    console.error(`Failed to delete orphaned image ${orphanPath}:`, err);
-                }
-            }
+            await cleanupRemovedImages(oldImagePaths, finalImagePaths);
 
             return sendJSON({ success: true, message: `EMR config for ${flow} ${position} updated`, data: entry });
         }
@@ -251,7 +339,7 @@ const server = http.createServer(async (req, res) => {
             console.log(`Deleting EMR config for: ${flow} ${position}`);
 
             const content = await fs.readFile(EMR_CONFIG_PATH, 'utf-8');
-            const data = JSON.parse(content);
+            const data = ensureEmrConfigData(JSON.parse(content));
 
             const index = data.entries.findIndex(e => e.fieldPosition === position && entryFlow(e) === flow);
             if (index !== -1) {
@@ -262,24 +350,89 @@ const server = http.createServer(async (req, res) => {
                 data.entries.splice(index, 1);
                 await fs.writeFile(EMR_CONFIG_PATH, JSON.stringify(data, null, 2));
 
-                // Cleanup images
-                for (const imgPath of imagePaths) {
-                    try {
-                        if (imgPath.startsWith('/emr-images/')) {
-                            const fullPath = path.join(IMAGES_DIR, path.basename(imgPath));
-                            await fs.unlink(fullPath);
-                            console.log(`Deleted image during EMR removal: ${fullPath}`);
-                        }
-                    } catch (e) {
-                        console.error(`Failed to cleanup image ${imgPath}:`, e);
-                    }
-                }
+                await cleanupEntryImages(imagePaths);
 
                 console.log(`Successfully deleted EMR config for ${flow} ${position}`);
                 return sendJSON({ success: true, message: `EMR config for ${flow} ${position} removed` });
             }
 
             return sendJSON({ success: false, message: 'EMR entry not found' }, 404);
+        }
+
+        if (method === 'POST' && pathname === '/api/update-segment-emr') {
+            const body = await getBody(req).catch(e => { throw e; });
+            const { segment, emrLocation, notes, imagePaths, segmentName, enabled } = body;
+            const flow = normalizeFlow(body.flow);
+
+            if (!segment) {
+                return sendJSON({ success: false, message: 'Segment is required' }, 400);
+            }
+
+            console.log(`Updating segment EMR config for: ${flow} ${segment}`);
+            const content = await fs.readFile(EMR_CONFIG_PATH, 'utf-8');
+            const data = ensureEmrConfigData(JSON.parse(content));
+
+            let entry = data.segmentEntries.find(e => e.segment === segment && entryFlow(e) === flow);
+            const oldImagePaths = entry ? [...(entry.imagePaths || [])] : [];
+            const finalImagePaths = await processImagePaths(imagePaths, `segment_${segment}`);
+
+            if (!entry) {
+                entry = {
+                    segment,
+                    flow,
+                    segmentName: segmentName || segment,
+                    emrLocation: emrLocation || '',
+                    imagePaths: finalImagePaths,
+                    notes: notes || '',
+                    enabled: enabled !== false
+                };
+                data.segmentEntries.push(entry);
+            } else {
+                entry.flow = flow;
+                entry.segmentName = segmentName || entry.segmentName || segment;
+                if (typeof emrLocation === 'string') {
+                    entry.emrLocation = emrLocation;
+                }
+                if (typeof notes === 'string') {
+                    entry.notes = notes;
+                }
+                if (Array.isArray(imagePaths)) {
+                    entry.imagePaths = finalImagePaths;
+                }
+                if (typeof enabled === 'boolean') {
+                    entry.enabled = enabled;
+                }
+            }
+
+            await fs.writeFile(EMR_CONFIG_PATH, JSON.stringify(data, null, 2));
+            await cleanupRemovedImages(oldImagePaths, entry.imagePaths || []);
+
+            return sendJSON({ success: true, message: `Segment EMR config for ${flow} ${segment} updated`, data: entry });
+        }
+
+        if (method === 'POST' && pathname === '/api/delete-segment-emr') {
+            const body = await getBody(req);
+            const { segment } = body;
+            const flow = normalizeFlow(body.flow);
+
+            if (!segment) {
+                return sendJSON({ success: false, message: 'Segment is required' }, 400);
+            }
+
+            const content = await fs.readFile(EMR_CONFIG_PATH, 'utf-8');
+            const data = ensureEmrConfigData(JSON.parse(content));
+            const index = data.segmentEntries.findIndex(e => e.segment === segment && entryFlow(e) === flow);
+
+            if (index === -1) {
+                return sendJSON({ success: false, message: 'Segment EMR entry not found' }, 404);
+            }
+
+            const entry = data.segmentEntries[index];
+            data.segmentEntries.splice(index, 1);
+            await fs.writeFile(EMR_CONFIG_PATH, JSON.stringify(data, null, 2));
+            await cleanupEntryImages(entry.imagePaths || []);
+
+            return sendJSON({ success: true, message: `Segment EMR config for ${flow} ${segment} removed` });
         }
 
         // 4. Get Library Inventory (3-Level Hierarchy)
@@ -511,17 +664,121 @@ const server = http.createServer(async (req, res) => {
             }
         }
 
+        // 9. Anonymize PID name, date of birth, and SSN in place
+        if (method === 'POST' && pathname === '/api/anonymize-message') {
+            const body = await getBody(req).catch(() => ({}));
+            const { direction, type, vendor, filename } = body;
+
+            if (!direction || !type || !vendor || !filename) {
+                return sendJSON({ success: false, message: 'Missing required message parameters' }, 400);
+            }
+
+            const vendorFilePath = path.join(MESSAGES_DIR, direction, type, vendor, `${filename}.hl7`);
+            const rootTypeFilePath = path.join(MESSAGES_DIR, direction, type, `${filename}.hl7`);
+            let filePath = vendorFilePath;
+            let content;
+
+            try {
+                content = await fs.readFile(filePath, 'utf-8');
+            } catch {
+                filePath = rootTypeFilePath;
+                try {
+                    content = await fs.readFile(filePath, 'utf-8');
+                } catch (err) {
+                    return sendJSON({ success: false, message: 'Message not found', error: err.message }, 404);
+                }
+            }
+
+            try {
+                const lineBreak = getLineBreak(content);
+                const trailingBreak = hasTrailingLineBreak(content);
+                const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                const segments = normalized.split('\n').filter(segment => segment.length > 0);
+                let pidCount = 0;
+
+                const updatedSegments = segments.map(segment => {
+                    if (segment.substring(0, 3) !== 'PID') return segment;
+
+                    let updatedSegment = segment;
+                    // Keep the caret in PID.5 as an XPN component separator.
+                    updatedSegment = updateSegmentFieldRaw(updatedSegment, 'PID', 5, 'ANONYMOUS^PATIENT^^^^^L');
+                    updatedSegment = updateSegmentFieldRaw(updatedSegment, 'PID', 7, '19000101');
+                    updatedSegment = updateSegmentFieldRaw(updatedSegment, 'PID', 19, '');
+                    pidCount += 1;
+                    return updatedSegment;
+                });
+
+                if (pidCount === 0) {
+                    return sendJSON({ success: false, message: 'No PID segment found' }, 400);
+                }
+
+                const updatedContent = updatedSegments.join(lineBreak) + (trailingBreak ? lineBreak : '');
+                await fs.writeFile(filePath, updatedContent, 'utf-8');
+
+                return sendJSON({ success: true, message: `Anonymized ${pidCount} PID segment${pidCount === 1 ? '' : 's'}` });
+            } catch (err) {
+                console.error('Failed to anonymize HL7 message:', err);
+                return sendJSON({ success: false, message: err.message || 'Failed to anonymize message' }, 500);
+            }
+        }
+
+        if (method === 'GET' || method === 'HEAD') {
+            if (pathname.startsWith('/emr-images/')) {
+                const imageRelativePath = decodeURIComponent(pathname.replace('/emr-images/', ''));
+                const imagePath = resolveSafePath(IMAGES_DIR, imageRelativePath);
+                if (!imagePath) {
+                    return sendJSON({ success: false, message: 'Invalid image path' }, 400);
+                }
+
+                try {
+                    await sendFile(res, imagePath, method);
+                    return;
+                } catch {
+                    return sendJSON({ success: false, message: 'Image not found' }, 404);
+                }
+            }
+
+            const distRequestPath = pathname === '/' ? 'index.html' : pathname.replace(/^\//, '');
+            const staticFilePath = resolveSafePath(DIST_DIR, distRequestPath);
+
+            if (staticFilePath) {
+                try {
+                    const stat = await fs.stat(staticFilePath);
+                    if (stat.isFile()) {
+                        await sendFile(res, staticFilePath, method);
+                        return;
+                    }
+                } catch {
+                    // If static asset isn't present, fall through to SPA entry.
+                }
+            }
+
+            try {
+                const indexPath = path.join(DIST_DIR, 'index.html');
+                await sendFile(res, indexPath, method);
+                return;
+            } catch {
+                return sendJSON({
+                    success: false,
+                    message: 'Frontend build not found. Run "npm run build" before starting the server in production.'
+                }, 500);
+            }
+        }
+
         // 404 Catch-all
         console.warn(`[404] No handler for: ${method} "${pathname}"`);
         const availableRoutes = [
             'POST /api/update-field',
             'POST /api/update-emr',
             'POST /api/delete-emr',
+            'POST /api/update-segment-emr',
+            'POST /api/delete-segment-emr',
             'GET /api/inventory',
             'POST /api/save-message',
             'POST /api/get-hl7',
             'POST /api/delete-message',
-            'POST /api/update-message-field'
+            'POST /api/update-message-field',
+            'POST /api/anonymize-message'
         ];
         sendJSON({
             success: false,

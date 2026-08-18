@@ -8,12 +8,13 @@ interface HL7ViewerProps {
     flow: HL7Flow;
     messageContext: MessageContext;
     onMessageFieldUpdated: () => void;
+    onAnonymize: () => void;
     onExportXlsx: () => void;
     onExportHl7: () => void;
     isExporting: boolean;
 }
 
-export function HL7Viewer({ message, flow, messageContext, onMessageFieldUpdated, onExportXlsx, onExportHl7, isExporting }: HL7ViewerProps) {
+export function HL7Viewer({ message, flow, messageContext, onMessageFieldUpdated, onAnonymize, onExportXlsx, onExportHl7, isExporting }: HL7ViewerProps) {
     const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
     const exportMenuRef = useRef<HTMLDivElement>(null);
 
@@ -59,6 +60,14 @@ export function HL7Viewer({ message, flow, messageContext, onMessageFieldUpdated
             <div className="hl7-viewer__header">
                 <div className="hl7-viewer__header-left">
                     <h3 className="hl7-viewer__title">Message Viewer</h3>
+                    <button
+                        type="button"
+                        className="hl7-viewer__anonymize-btn"
+                        onClick={onAnonymize}
+                        title="Overwrite the current message's PID name, date of birth, and SSN"
+                    >
+                        Anonymize
+                    </button>
                     <div className="hl7-viewer__export-menu" ref={exportMenuRef}>
                         <button
                             type="button"
@@ -115,6 +124,10 @@ export function HL7Viewer({ message, flow, messageContext, onMessageFieldUpdated
                 <span className="hl7-viewer__legend-item">
                     <span className="hl7-viewer__legend-dot hl7-viewer__legend-dot--field" />
                     Hover for field details
+                </span>
+                <span className="hl7-viewer__legend-item">
+                    <span className="hl7-viewer__legend-dot hl7-viewer__legend-dot--emr" />
+                    Hover segment badges for segment metadata
                 </span>
                 <span className="hl7-viewer__legend-item">
                     <span className="hl7-viewer__legend-dot hl7-viewer__legend-dot--emr" />

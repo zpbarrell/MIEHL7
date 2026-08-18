@@ -5,4 +5,4 @@ IN1|1||||||||||||||||||||||||||||||||||||||||||||||C||
 ORC|NW|4975|||Pending||^^^^^0||20260227120731|279^Medical Informatics Engineering^MIE||40054^System^Provider^Not In|^^^^OFFICE^^^^^Office||20260227000000||OFFICE||||Office|^^^^^US|(913) 636-4885||||||||
 OBR|1|4975||CVIX123^Xray Chest PA and Lateral^^71020^^CPT|0|20260227120731|20260227120700|||||||||40054^System^Provider^Not In||||||||||||||||||||||||||||||||||
 DG1|1|ICD|I10^HYPERTENSION^I10|HYPERTENSION||||||||||||
-OBX|1|ST|CVXCODE^SIGNATURE CODE||123XYZ||||||||||||||||||||
+OBX|1|ST|CVXCODE\S\SIGNATURE CODE||123XYZ||||||||||||||||||||

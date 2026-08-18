@@ -31,6 +31,10 @@
 }
 
 .segment-row__badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-family: 'JetBrains Mono', monospace;
     font-size: var(--font-xs);
     font-weight: 700;
@@ -43,6 +47,26 @@
     letter-spacing: 0.5px;
     cursor: help;
     transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.segment-row__badge--configured {
+    box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.25), 0 0 18px rgba(251, 191, 36, 0.14);
+}
+
+.segment-row__badge--pinned {
+    border-color: color-mix(in srgb, var(--badge-color) 60%, white 10%);
+    background: color-mix(in srgb, var(--badge-color) 24%, transparent);
+}
+
+.segment-row__badge-dot {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #fbbf24;
+    box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.95);
 }
 
 .segment-row:hover .segment-row__badge {

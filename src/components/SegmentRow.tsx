@@ -1,7 +1,8 @@
-import { memo } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import type { ParsedSegment, HL7Flow, MessageContext } from '../lib/types';
-import { getSegmentDefinition } from '../lib/field-dictionary';
+import { getSegmentDefinition, hasSegmentEmrConfig } from '../lib/field-dictionary';
 import { FieldCell } from './FieldCell';
+import { SegmentTooltip } from './SegmentTooltip';
 import './SegmentRow.css';
 
 interface SegmentRowProps {
@@ -25,9 +26,96 @@ const SEGMENT_COLORS: Record<string, string> = {
 };
 
 export const SegmentRow = memo(function SegmentRow({ segment, index, flow, messageContext, onMessageFieldUpdated }: SegmentRowProps) {
+    const [showTooltip, setShowTooltip] = useState(false);
+    const [isPinned, setIsPinned] = useState(false);
+    const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+    const [segmentMetadataVersion, setSegmentMetadataVersion] = useState(0);
+    const badgeRef = useRef<HTMLDivElement>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const isHoveringTooltipRef = useRef(false);
     const segDef = getSegmentDefinition(segment.name);
     const badgeColor = SEGMENT_COLORS[segment.name] || 'var(--segment-default)';
     const fieldCount = segment.fields.filter((f, i) => i > 0 && f.value).length;
+    const hasMetadata = hasSegmentEmrConfig(segment.name, flow);
+
+    useEffect(() => {
+        return () => clearTimeout(timeoutRef.current);
+    }, []);
+
+    const closeTooltipWithDelay = useCallback(() => {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+            if (!isPinned && !isHoveringTooltipRef.current) {
+                setShowTooltip(false);
+            }
+        }, 150);
+    }, [isPinned]);
+
+    const handleMouseEnter = useCallback(() => {
+        clearTimeout(timeoutRef.current);
+        if (!isPinned && badgeRef.current) {
+            setAnchorRect(badgeRef.current.getBoundingClientRect());
+            setShowTooltip(true);
+        }
+    }, [isPinned]);
+
+    const handleMouseLeave = useCallback(() => {
+        if (!isPinned) {
+            closeTooltipWithDelay();
+        }
+    }, [closeTooltipWithDelay, isPinned]);
+
+    const handleTooltipHoverStart = useCallback(() => {
+        isHoveringTooltipRef.current = true;
+        clearTimeout(timeoutRef.current);
+    }, []);
+
+    const handleTooltipHoverEnd = useCallback(() => {
+        isHoveringTooltipRef.current = false;
+        if (!isPinned) {
+            closeTooltipWithDelay();
+        }
+    }, [closeTooltipWithDelay, isPinned]);
+
+    const handleClick = useCallback((event: React.MouseEvent) => {
+        event.stopPropagation();
+        if (badgeRef.current) {
+            setAnchorRect(badgeRef.current.getBoundingClientRect());
+            setShowTooltip(true);
+            setIsPinned(true);
+        }
+    }, []);
+
+    const handleTooltipClose = useCallback(() => {
+        setShowTooltip(false);
+        setIsPinned(false);
+    }, []);
+
+    const handleConfigUpdated = useCallback(() => {
+        setSegmentMetadataVersion(version => version + 1);
+    }, []);
+
+    useEffect(() => {
+        if (!isPinned) {
+            return;
+        }
+
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            if (target.closest('.segment-tooltip')) return;
+            if (badgeRef.current && badgeRef.current.contains(target)) return;
+            handleTooltipClose();
+        };
+
+        const timer = setTimeout(() => {
+            document.addEventListener('mousedown', handleClickOutside);
+        }, 10);
+
+        return () => {
+            clearTimeout(timer);
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [handleTooltipClose, isPinned]);
 
     return (
         <div
@@ -37,16 +125,34 @@ export const SegmentRow = memo(function SegmentRow({ segment, index, flow, messa
             {/* Segment badge */}
             <div className="segment-row__badge-col">
                 <div
-                    className="segment-row__badge"
+                    ref={badgeRef}
+                    className={`segment-row__badge ${hasMetadata ? 'segment-row__badge--configured' : ''} ${isPinned ? 'segment-row__badge--pinned' : ''}`}
                     style={{ '--badge-color': badgeColor } as React.CSSProperties}
                     title={segDef ? `${segDef.name}: ${segDef.description}` : segment.name}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                    onClick={handleClick}
                 >
                     {segment.name}
+                    {hasMetadata && <span className="segment-row__badge-dot" />}
                 </div>
                 {segDef && (
                     <div className="segment-row__badge-label" title={segDef.name}>
                         {segDef.name}
                     </div>
+                )}
+                {showTooltip && anchorRect && (
+                    <SegmentTooltip
+                        key={`${segment.name}-${flow}-${segmentMetadataVersion}`}
+                        segmentName={segment.name}
+                        flow={flow}
+                        anchorRect={anchorRect}
+                        isPinned={isPinned}
+                        onHoverStart={handleTooltipHoverStart}
+                        onHoverEnd={handleTooltipHoverEnd}
+                        onConfigUpdated={handleConfigUpdated}
+                        onClose={handleTooltipClose}
+                    />
                 )}
             </div>
 

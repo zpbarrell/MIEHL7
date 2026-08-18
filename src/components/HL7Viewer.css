@@ -57,6 +57,23 @@
     color: var(--text-primary);
 }
 
+.hl7-viewer__anonymize-btn {
+    border: 1px solid rgba(251, 191, 36, 0.45);
+    background: rgba(251, 191, 36, 0.12);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    font-size: var(--font-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.hl7-viewer__anonymize-btn:hover {
+    background: rgba(251, 191, 36, 0.22);
+    border-color: rgba(251, 191, 36, 0.7);
+}
+
 .hl7-viewer__export-btn {
     border: 1px solid var(--surface-border);
     background: var(--bg-card);

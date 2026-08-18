@@ -6,6 +6,7 @@ import { MessageSelector } from './components/MessageSelector';
 import { HL7Viewer } from './components/HL7Viewer';
 import { ImportModal } from './components/ImportModal';
 import { exportMessageAsHl7, exportMessageAsXlsx } from './lib/hl7-export-xlsx';
+import { anonymizeMessage } from './lib/field-dictionary';
 import './App.css';
 
 type Inventory = Record<string, Record<string, Record<string, string[]>>>;
@@ -333,6 +334,30 @@ function App() {
     loadMessage(currentDirection, currentType, currentVendor, currentFilename);
   }, [currentDirection, currentType, currentVendor, currentFilename]);
 
+  const handleAnonymize = useCallback(async () => {
+    if (!activeMessage) return;
+
+    const confirmed = window.confirm(
+      'Overwrite this message with anonymized PID values? This will replace PID.5 (name), PID.7 (date of birth), and PID.19 (SSN) in the current file.'
+    );
+    if (!confirmed) return;
+
+    setIsLoading(true);
+    try {
+      const result = await anonymizeMessage(activeMessageContext);
+      if (result.success) {
+        await loadMessage(currentDirection, currentType, currentVendor, currentFilename);
+      } else {
+        alert(`Anonymization failed: ${result.message || result.error || 'Unknown server error'}`);
+      }
+    } catch (err) {
+      console.error('Anonymization failed:', err);
+      alert('Anonymization failed.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeMessage, activeMessageContext, currentDirection, currentFilename, currentType, currentVendor]);
+
   const handleExportXlsx = useCallback(async () => {
     if (!activeMessage) return;
     setIsExporting(true);
@@ -415,6 +440,7 @@ function App() {
           flow={currentDirection}
           messageContext={activeMessageContext}
           onMessageFieldUpdated={handleMessageFieldUpdated}
+          onAnonymize={handleAnonymize}
           onExportXlsx={handleExportXlsx}
           onExportHl7={handleExportHl7}
           isExporting={isExporting}
