@@ -1,0 +1,8 @@
+MSH|^~\&|WCDEV|ENTERPRISEHEALTH|EPIC|BEAKER|20260714124648||ORM^O01^ORM_O01|DSD1784047608759007|P|2.5|||||||||||||
+PID|1|10041|10041^^^MR&1.2.840.114398.1.668.1&ISO^MR||Test^Melanie^^^^^L||20010101000000|F|||^^^IN^^US||\S\PRN\S\PH\S\Melanie.Matt@harvard.edu||||||||||||||||||||||||||
+PV1|1|PREPLACE|^^^ENTERPRISEHEALTH|||||||||||||||||||||||||||||||0|||||||0|||20260714124508||||||839^^^^^1.2.840.114398.1.8227||
+IN1|1||||||||||||||||||||||||||||||||||||||||||||||C||
+ORC|NW|446|||Pending||^^^^^0||20260714124559|128^TEST^MELANIE||1730737602^MATTHEWS^MELANIE^^^^^N^NPI|^^^^BCH^^^^^Boston Children's Hospital|^^^Melanie.Matthews@childrens.harvard.edu|20260714000000||BCH||||Boston Children's Hospital|333 Longwood Ave^LO-212^Boston^MA^02115^US|||||||||
+OBR|1|446||LAB4068^SARS COV-2 (COVID-19) PCR, RESP, QUAL (EPIC)|0|20260714124559|20260714124500||||||||Swab^^^Oropharynx|1730737602^MATTHEWS^MELANIE^^^^^N^NPI||||||||||||||||||||||||||||||||||
+OBX|1|ST|LAB4068SpecimenType^SPECIMEN TYPE||SWAB||||||||||||||||||||
+OBX|2|ST|LAB4068SpecimenSource^SPECIMEN SOURCE||OROPHARYNX||||||||||||||||||||

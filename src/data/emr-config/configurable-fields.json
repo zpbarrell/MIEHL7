@@ -172,7 +172,9 @@
       "fieldName": "Phone Number - Home",
       "emrLocation": "",
       "imagePaths": [],
-      "notes": ""
+      "notes": "",
+      "flow": "Outbound",
+      "enabled": true
     },
     {
       "fieldPosition": "PV1.3",
@@ -189,7 +191,8 @@
         "/emr-images/MSH_5_1772225213732_0.png"
       ],
       "notes": "",
-      "enabled": true
+      "enabled": true,
+      "flow": "Outbound"
     },
     {
       "fieldPosition": "MSH.3",

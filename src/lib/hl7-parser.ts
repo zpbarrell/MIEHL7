@@ -68,11 +68,13 @@ function parseSegment(raw: string): ParsedSegment {
 }
 
 function parseField(raw: string, position: string): ParsedField {
+    const value = decodeHL7Escapes(raw);
+
     // Handle repetitions
-    const repetitions = raw.split('~');
+    const repetitions = value.split('~');
 
     // Parse components from the first (or only) value
-    const componentStrings = raw.split('^');
+    const componentStrings = value.split('^');
     const components: ParsedComponent[] = componentStrings.map((comp, index) => ({
         value: comp,
         position: `${position}.${index + 1}`,
@@ -80,11 +82,24 @@ function parseField(raw: string, position: string): ParsedField {
 
     return {
         position,
-        value: raw,
+        value,
         components,
         repetitions,
         raw,
     };
+}
+
+function decodeHL7Escapes(value: string): string {
+    return value.replace(/\\([FSRTE])\\/g, (match, code: string) => {
+        switch (code) {
+            case 'F': return '|';
+            case 'S': return '^';
+            case 'R': return '~';
+            case 'T': return '&';
+            case 'E': return '\\';
+            default: return match;
+        }
+    });
 }
 
 /**

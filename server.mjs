@@ -138,10 +138,7 @@ const sendFile = async (res, filePath, method = 'GET') => {
 const escapeHl7Value = (value = '') =>
     value
         .replace(/\\/g, '\\E\\')
-        .replace(/\|/g, '\\F\\')
-        .replace(/\^/g, '\\S\\')
-        .replace(/~/g, '\\R\\')
-        .replace(/&/g, '\\T\\');
+        .replace(/\|/g, '\\F\\');
 
 const updateSegmentFieldValue = (segmentRaw, segmentName, fieldIndex, value) => {
     const parts = segmentRaw.split('|');

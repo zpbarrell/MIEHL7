@@ -51,7 +51,7 @@ export async function exportMessageAsXlsx(
     const mappingHeader = [
         'Segment',
         'Position',
-        'Segment Name',
+        'Field Name',
         'Components',
         'Supported',
         'Required',
@@ -80,7 +80,7 @@ export async function exportMessageAsXlsx(
             const mappingRow = mappingWorksheet.addRow([
                 segment.name,
                 position,
-                getSegmentDefinition(segment.name)?.name || segment.name,
+                fieldDef?.name || `Field ${fieldIndex}`,
                 getComponentsSummary(segment.name, fieldIndex, field),
                 fieldDef ? 'Yes' : 'No',
                 fieldDef ? (fieldDef.required ? 'Yes' : 'No') : 'Unknown',
