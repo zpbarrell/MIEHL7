@@ -2,6 +2,7 @@ import http from 'http';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { anonymizeHl7Content } from './src/lib/hl7-anonymizer.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 3001;
@@ -714,7 +715,8 @@ const server = http.createServer(async (req, res) => {
                 return sendJSON({ success: false, message: err.message || 'Failed to update segments' }, 500);
             }
         }
-        // 9. Anonymize PID name, date of birth, and SSN in place
+
+        // 9. Anonymize names and contact details throughout the message
         if (method === 'POST' && pathname === '/api/anonymize-message') {
             const body = await getBody(req).catch(() => ({}));
             const { direction, type, vendor, filename } = body;
@@ -740,32 +742,19 @@ const server = http.createServer(async (req, res) => {
             }
 
             try {
-                const lineBreak = getLineBreak(content);
-                const trailingBreak = hasTrailingLineBreak(content);
-                const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-                const segments = normalized.split('\n').filter(segment => segment.length > 0);
-                let pidCount = 0;
+                const definitionFiles = await fs.readdir(DEFS_DIR);
+                const definitions = await Promise.all(definitionFiles
+                    .filter(file => file.endsWith('.json'))
+                    .map(async file => JSON.parse(await fs.readFile(path.join(DEFS_DIR, file), 'utf-8'))));
 
-                const updatedSegments = segments.map(segment => {
-                    if (segment.substring(0, 3) !== 'PID') return segment;
-
-                    let updatedSegment = segment;
-                    // Keep the caret in PID.5 as an XPN component separator.
-                    updatedSegment = updateSegmentFieldRaw(updatedSegment, 'PID', 5, 'ANONYMOUS^PATIENT^^^^^L');
-                    updatedSegment = updateSegmentFieldRaw(updatedSegment, 'PID', 7, '19000101');
-                    updatedSegment = updateSegmentFieldRaw(updatedSegment, 'PID', 19, '');
-                    pidCount += 1;
-                    return updatedSegment;
-                });
-
-                if (pidCount === 0) {
+                if (!content.split(/\r\n|\n|\r/).some(segment => segment.startsWith('PID|'))) {
                     return sendJSON({ success: false, message: 'No PID segment found' }, 400);
                 }
 
-                const updatedContent = updatedSegments.join(lineBreak) + (trailingBreak ? lineBreak : '');
+                const updatedContent = anonymizeHl7Content(content, definitions);
                 await fs.writeFile(filePath, updatedContent, 'utf-8');
 
-                return sendJSON({ success: true, message: `Anonymized ${pidCount} PID segment${pidCount === 1 ? '' : 's'}` });
+                return sendJSON({ success: true, message: 'Anonymized names and contact details throughout the message' });
             } catch (err) {
                 console.error('Failed to anonymize HL7 message:', err);
                 return sendJSON({ success: false, message: err.message || 'Failed to anonymize message' }, 500);

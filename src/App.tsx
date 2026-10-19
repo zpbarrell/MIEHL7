@@ -334,6 +334,7 @@ function App() {
     if (!currentDirection || !currentType || !currentVendor || !currentFilename) return;
     loadMessage(currentDirection, currentType, currentVendor, currentFilename);
   }, [currentDirection, currentType, currentVendor, currentFilename]);
+
   const handleSegmentOperation = useCallback(async (operation: 'duplicate' | 'delete', segmentIndex: number, segmentName: string) => {
     if (!activeMessage) return;
     if (operation === 'delete' && !window.confirm(`Delete this ${segmentName} segment? This changes the current HL7 file.`)) return;
@@ -356,12 +357,11 @@ function App() {
     }
   }, [activeMessage, activeMessageContext, currentDirection, currentFilename, currentType, currentVendor]);
 
-
   const handleAnonymize = useCallback(async () => {
     if (!activeMessage) return;
 
     const confirmed = window.confirm(
-      'Overwrite this message with anonymized PID values? This will replace PID.5 (name), PID.7 (date of birth), and PID.19 (SSN) in the current file.'
+      'Overwrite names and contact information throughout this message with sample values? This will update the current file.'
     );
     if (!confirmed) return;
 
@@ -462,9 +462,9 @@ function App() {
           message={activeMessage}
           flow={currentDirection}
           messageContext={activeMessageContext}
+          onMessageFieldUpdated={handleMessageFieldUpdated}
           onDuplicateSegment={(index, name) => { void handleSegmentOperation('duplicate', index, name); }}
           onDeleteSegment={(index, name) => { void handleSegmentOperation('delete', index, name); }}
-          onMessageFieldUpdated={handleMessageFieldUpdated}
           onAnonymize={handleAnonymize}
           onExportXlsx={handleExportXlsx}
           onExportHl7={handleExportHl7}

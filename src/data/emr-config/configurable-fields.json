@@ -46,7 +46,9 @@
       "fieldName": "Ordering Facility Name",
       "emrLocation": "System Configuration > Facility Setup > Facility Name",
       "imagePaths": [],
-      "notes": "Pulled from facility configuration. Must match payer requirements."
+      "notes": "Pulled from facility configuration. Must match payer requirements.",
+      "flow": "Outbound",
+      "enabled": true
     },
     {
       "fieldPosition": "OBR.4",
@@ -319,6 +321,15 @@
       "imagePaths": [],
       "notes": "",
       "enabled": true
+    },
+    {
+      "fieldPosition": "ORC.14",
+      "flow": "Outbound",
+      "fieldName": "Call Back Phone Number",
+      "emrLocation": "",
+      "imagePaths": [],
+      "notes": "",
+      "enabled": false
     }
   ],
   "segmentEntries": []
