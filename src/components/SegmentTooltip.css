@@ -1,5 +1,12 @@
 .segment-tooltip {
-    min-width: 320px;
+    min-width: 0;
+}
+
+.segment-tooltip:not(.field-tooltip--expanded):not(.field-tooltip--editing) .field-tooltip__segment-info {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 
 .segment-tooltip__delete-btn {

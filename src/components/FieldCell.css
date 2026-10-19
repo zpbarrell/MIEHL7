@@ -26,6 +26,20 @@
     text-overflow: ellipsis;
 }
 
+.field-cell__editor {
+    width: min(28ch, 40vw);
+    min-width: 8ch;
+    box-sizing: border-box;
+    padding: 2px 5px;
+    border: 1px solid var(--accent-blue);
+    border-radius: 3px;
+    outline: none;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: var(--font-xs);
+}
+
 .field-cell--empty .field-cell__value {
     color: var(--text-muted);
     min-width: 6px;

@@ -43,6 +43,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
 }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const tooltipRef = useRef<HTMLDivElement>(null);
@@ -375,7 +376,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
     const tooltipContent = (
         <div
             ref={tooltipRef}
-            className={`field-tooltip ${isVisible ? 'field-tooltip--visible' : ''} ${emrConfigurable ? 'field-tooltip--emr' : ''} ${isPinned ? 'field-tooltip--pinned' : ''}`}
+            className={`field-tooltip ${isVisible ? 'field-tooltip--visible' : ''} ${emrConfigurable ? 'field-tooltip--emr' : ''} ${isPinned ? 'field-tooltip--pinned' : ''} ${isExpanded ? 'field-tooltip--expanded' : ''} ${isEditing ? 'field-tooltip--editing' : ''}`}
             style={{ top: position.top, left: position.left }}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
@@ -394,6 +395,19 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
                         )}
                     </div>
                     <div className="field-tooltip__actions">
+                        <button
+                            type="button"
+                            className="field-tooltip__expand-btn"
+                            aria-label={isExpanded ? 'Show compact tooltip' : 'Expand tooltip'}
+                            aria-expanded={isExpanded}
+                            title={isExpanded ? 'Show compact tooltip' : 'Expand tooltip'}
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                setIsExpanded(expanded => !expanded);
+                            }}
+                        >
+                            {isExpanded ? 'Compact' : 'Expand'}
+                        </button>
                         {isPinned && (
                             <div className="field-tooltip__emr-toggle-wrap">
                                 <span className="field-tooltip__emr-toggle-label">EMR Setup</span>
@@ -453,7 +467,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
 
             {/* EMR Badge */}
             {emrConfigurable && (
-                <div className="field-tooltip__emr-badge">
+                <div className="field-tooltip__emr-badge field-tooltip__secondary">
                     <span className="field-tooltip__emr-icon">⚙</span>
                     EMR Configurable
                 </div>
@@ -478,7 +492,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
 
             {/* Description */}
             {(fieldDef?.description || isEditing) && (
-                <div className="field-tooltip__section">
+                <div className="field-tooltip__section field-tooltip__secondary">
                     <div className="field-tooltip__section-label">Description</div>
                     {isEditing ? (
                         <textarea
@@ -496,7 +510,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
 
             {/* Components breakdown */}
             {field.components.length > 1 && fieldDef?.components && !isEditing && (
-                <div className="field-tooltip__section">
+                <div className="field-tooltip__section field-tooltip__secondary">
                     <div className="field-tooltip__section-label">Components</div>
                     <div className="field-tooltip__components">
                         {field.components.map((comp, i) => {
@@ -518,7 +532,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
 
             {/* EMR Configuration Details */}
             {(localEmrConfig && localEmrEnabled) && (
-                <div className="field-tooltip__section field-tooltip__emr-section">
+                <div className="field-tooltip__section field-tooltip__emr-section field-tooltip__secondary">
                     <div className="field-tooltip__section-label">
                         <span className="field-tooltip__emr-icon">📍</span> EMR UI Control
                     </div>
@@ -635,7 +649,7 @@ export const FieldTooltip: React.FC<FieldTooltipProps> = ({
 
             {/* Field metadata */}
             {fieldDef && !isEditing && (
-                <div className="field-tooltip__footer">
+                <div className="field-tooltip__footer field-tooltip__secondary">
                     {fieldDef.required && <span className="field-tooltip__tag field-tooltip__tag--required">Required</span>}
                     {fieldDef.maxLength && <span className="field-tooltip__tag">Max: {fieldDef.maxLength}</span>}
                     <span className="field-tooltip__tag">{fieldDef.dataType}</span>

@@ -6,6 +6,7 @@ import { MessageSelector } from './components/MessageSelector';
 import { HL7Viewer } from './components/HL7Viewer';
 import { ImportModal } from './components/ImportModal';
 import { exportMessageAsHl7, exportMessageAsXlsx } from './lib/hl7-export-xlsx';
+import { deleteMessageSegment, duplicateMessageSegment } from './lib/hl7-message-editor';
 import { anonymizeMessage } from './lib/field-dictionary';
 import './App.css';
 
@@ -333,6 +334,28 @@ function App() {
     if (!currentDirection || !currentType || !currentVendor || !currentFilename) return;
     loadMessage(currentDirection, currentType, currentVendor, currentFilename);
   }, [currentDirection, currentType, currentVendor, currentFilename]);
+  const handleSegmentOperation = useCallback(async (operation: 'duplicate' | 'delete', segmentIndex: number, segmentName: string) => {
+    if (!activeMessage) return;
+    if (operation === 'delete' && !window.confirm(`Delete this ${segmentName} segment? This changes the current HL7 file.`)) return;
+
+    setIsLoading(true);
+    try {
+      const result = operation === 'duplicate'
+        ? await duplicateMessageSegment(activeMessageContext, segmentName, segmentIndex)
+        : await deleteMessageSegment(activeMessageContext, segmentName, segmentIndex);
+      if (result.success) {
+        await loadMessage(currentDirection, currentType, currentVendor, currentFilename);
+      } else {
+        alert(`Failed to ${operation} segment: ${result.message || result.error || 'Unknown server error'}`);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      alert(`Failed to ${operation} segment: ${message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeMessage, activeMessageContext, currentDirection, currentFilename, currentType, currentVendor]);
+
 
   const handleAnonymize = useCallback(async () => {
     if (!activeMessage) return;
@@ -439,6 +462,8 @@ function App() {
           message={activeMessage}
           flow={currentDirection}
           messageContext={activeMessageContext}
+          onDuplicateSegment={(index, name) => { void handleSegmentOperation('duplicate', index, name); }}
+          onDeleteSegment={(index, name) => { void handleSegmentOperation('delete', index, name); }}
           onMessageFieldUpdated={handleMessageFieldUpdated}
           onAnonymize={handleAnonymize}
           onExportXlsx={handleExportXlsx}

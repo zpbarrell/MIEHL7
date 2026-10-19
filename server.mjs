@@ -661,6 +661,59 @@ const server = http.createServer(async (req, res) => {
             }
         }
 
+        if (method === 'POST' && ['/api/duplicate-message-segment', '/api/delete-message-segment'].includes(pathname)) {
+            const body = await getBody(req).catch(() => ({}));
+            const { direction, type, vendor, filename, segmentName } = body;
+            const segmentIndex = parseInt(body.segmentIndex, 10);
+
+            if (!direction || !type || !vendor || !filename || !segmentName) {
+                return sendJSON({ success: false, message: 'Missing required message or segment parameters' }, 400);
+            }
+            if (!Number.isInteger(segmentIndex) || segmentIndex < 0 || !/^[A-Za-z0-9]{3}$/.test(segmentName)) {
+                return sendJSON({ success: false, message: 'Invalid segment index or name' }, 400);
+            }
+            if (segmentName.toUpperCase() === 'MSH') {
+                return sendJSON({ success: false, message: 'The MSH segment cannot be duplicated or deleted' }, 400);
+            }
+
+            const vendorFilePath = path.join(MESSAGES_DIR, direction, type, vendor, `${filename}.hl7`);
+            const rootTypeFilePath = path.join(MESSAGES_DIR, direction, type, `${filename}.hl7`);
+            let filePath = vendorFilePath;
+            let content;
+            try {
+                content = await fs.readFile(filePath, 'utf-8');
+            } catch {
+                filePath = rootTypeFilePath;
+                try {
+                    content = await fs.readFile(filePath, 'utf-8');
+                } catch (err) {
+                    return sendJSON({ success: false, message: 'Message not found', error: err.message }, 404);
+                }
+            }
+
+            try {
+                const lineBreak = getLineBreak(content);
+                const trailingBreak = hasTrailingLineBreak(content);
+                const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                const segments = normalized.split('\n').filter(segment => segment.length > 0);
+                if (segmentIndex >= segments.length || segments[segmentIndex].slice(0, 3).toUpperCase() !== segmentName.toUpperCase()) {
+                    return sendJSON({ success: false, message: 'Segment index is stale or does not match the segment name' }, 400);
+                }
+
+                if (pathname === '/api/duplicate-message-segment') {
+                    segments.splice(segmentIndex + 1, 0, segments[segmentIndex]);
+                } else {
+                    segments.splice(segmentIndex, 1);
+                }
+
+                const updatedContent = segments.join(lineBreak) + (trailingBreak ? lineBreak : '');
+                await fs.writeFile(filePath, updatedContent, 'utf-8');
+                return sendJSON({ success: true, segmentIndex, segmentName });
+            } catch (err) {
+                console.error('Failed to update HL7 segments:', err);
+                return sendJSON({ success: false, message: err.message || 'Failed to update segments' }, 500);
+            }
+        }
         // 9. Anonymize PID name, date of birth, and SSN in place
         if (method === 'POST' && pathname === '/api/anonymize-message') {
             const body = await getBody(req).catch(() => ({}));

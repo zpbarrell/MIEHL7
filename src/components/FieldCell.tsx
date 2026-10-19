@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect, memo } from 'react';
 import type { ParsedField, HL7Flow, MessageContext } from '../lib/types';
-import { isEmrConfigurable, getFieldLabel } from '../lib/field-dictionary';
+import { isEmrConfigurable, getFieldLabel, saveMessageFieldValue } from '../lib/field-dictionary';
 import { FieldTooltip } from './FieldTooltip';
 import './FieldCell.css';
 
@@ -17,8 +17,12 @@ interface FieldCellProps {
 export const FieldCell = memo(function FieldCell({ field, segmentName, segmentIndex, fieldIndex, flow, messageContext, onMessageFieldUpdated }: FieldCellProps) {
     const [showTooltip, setShowTooltip] = useState(false);
     const [isPinned, setIsPinned] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [editValue, setEditValue] = useState(field.value || '');
     const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
     const cellRef = useRef<HTMLSpanElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
     const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const isHoveringTooltipRef = useRef(false);
 
@@ -26,6 +30,13 @@ export const FieldCell = memo(function FieldCell({ field, segmentName, segmentIn
     useEffect(() => {
         return () => clearTimeout(timeoutRef.current);
     }, []);
+
+    useEffect(() => {
+        if (isEditing) {
+            inputRef.current?.focus();
+            inputRef.current?.select();
+        }
+    }, [isEditing]);
 
     const emrConfigurable = isEmrConfigurable(`${segmentName}.${fieldIndex}`, flow);
     const label = getFieldLabel(`${segmentName}.${fieldIndex}`);
@@ -69,12 +80,58 @@ export const FieldCell = memo(function FieldCell({ field, segmentName, segmentIn
     // Click to pin
     const handleClick = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
+        if (isEditing) return;
         if (cellRef.current) {
             setAnchorRect(cellRef.current.getBoundingClientRect());
             setShowTooltip(true);
             setIsPinned(true);
         }
-    }, []);
+    }, [isEditing]);
+
+    const handleDoubleClick = useCallback((event: React.MouseEvent) => {
+        event.stopPropagation();
+        if (segmentName === 'MSH' && fieldIndex === 1) return;
+        clearTimeout(timeoutRef.current);
+        setShowTooltip(false);
+        setIsPinned(false);
+        setEditValue(field.value || '');
+        setIsEditing(true);
+    }, [field.value, fieldIndex, segmentName]);
+
+    const handleEditCancel = useCallback(() => {
+        setEditValue(field.value || '');
+        setIsEditing(false);
+    }, [field.value]);
+
+    const handleEditSave = useCallback(async () => {
+        if (isSaving) return;
+        if (editValue === (field.value || '')) {
+            setIsEditing(false);
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const result = await saveMessageFieldValue(
+                messageContext,
+                segmentName,
+                segmentIndex,
+                fieldIndex,
+                editValue
+            );
+            if (result.success) {
+                setIsEditing(false);
+                onMessageFieldUpdated();
+            } else {
+                alert(`Failed to save field: ${result.message || result.error || 'Unknown server error'}`);
+            }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            alert(`Failed to save field: ${message}`);
+        } finally {
+            setIsSaving(false);
+        }
+    }, [editValue, field.value, fieldIndex, isSaving, messageContext, onMessageFieldUpdated, segmentIndex, segmentName]);
 
     // Close when pinned — triggered by clicking outside or pressing Escape
     const handleTooltipClose = useCallback(() => {
@@ -118,20 +175,44 @@ export const FieldCell = memo(function FieldCell({ field, segmentName, segmentIn
 
     return (
         <>
-            <span
-                ref={cellRef}
-                className={`field-cell ${emrConfigurable ? 'field-cell--emr' : ''} ${isEmpty ? 'field-cell--empty' : ''} ${isPinned ? 'field-cell--pinned' : ''}`}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                onClick={handleClick}
-                data-position={field.position}
-                title={label}
-            >
-                <span className="field-cell__value">
-                    {field.value || '\u00A0'}
+            {isEditing ? (
+                <input
+                    ref={inputRef}
+                    className="field-cell__editor"
+                    value={editValue}
+                    aria-label={`Edit ${label}`}
+                    disabled={isSaving}
+                    onChange={(event) => setEditValue(event.target.value)}
+                    onBlur={() => { void handleEditSave(); }}
+                    onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            void handleEditSave();
+                        } else if (event.key === 'Escape') {
+                            event.preventDefault();
+                            handleEditCancel();
+                        }
+                    }}
+                    onClick={(event) => event.stopPropagation()}
+                    onDoubleClick={(event) => event.stopPropagation()}
+                />
+            ) : (
+                <span
+                    ref={cellRef}
+                    className={`field-cell ${emrConfigurable ? 'field-cell--emr' : ''} ${isEmpty ? 'field-cell--empty' : ''} ${isPinned ? 'field-cell--pinned' : ''}`}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                    onClick={handleClick}
+                    onDoubleClick={handleDoubleClick}
+                    data-position={field.position}
+                    title={`${label} (double-click to edit)`}
+                >
+                    <span className="field-cell__value">
+                        {field.value || '\u00A0'}
+                    </span>
+                    {emrConfigurable && <span className="field-cell__emr-dot" />}
                 </span>
-                {emrConfigurable && <span className="field-cell__emr-dot" />}
-            </span>
+            )}
             {showTooltip && anchorRect && (
                 <FieldTooltip
                     field={field}

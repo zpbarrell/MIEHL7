@@ -8,13 +8,15 @@ interface HL7ViewerProps {
     flow: HL7Flow;
     messageContext: MessageContext;
     onMessageFieldUpdated: () => void;
+    onDuplicateSegment: (index: number, name: string) => void;
+    onDeleteSegment: (index: number, name: string) => void;
     onAnonymize: () => void;
     onExportXlsx: () => void;
     onExportHl7: () => void;
     isExporting: boolean;
 }
 
-export function HL7Viewer({ message, flow, messageContext, onMessageFieldUpdated, onAnonymize, onExportXlsx, onExportHl7, isExporting }: HL7ViewerProps) {
+export function HL7Viewer({ message, flow, messageContext, onMessageFieldUpdated, onDuplicateSegment, onDeleteSegment, onAnonymize, onExportXlsx, onExportHl7, isExporting }: HL7ViewerProps) {
     const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
     const exportMenuRef = useRef<HTMLDivElement>(null);
 
@@ -126,6 +128,9 @@ export function HL7Viewer({ message, flow, messageContext, onMessageFieldUpdated
                     Hover for field details
                 </span>
                 <span className="hl7-viewer__legend-item">
+                    Double-click a field value to edit
+                </span>
+                <span className="hl7-viewer__legend-item">
                     <span className="hl7-viewer__legend-dot hl7-viewer__legend-dot--emr" />
                     Hover segment badges for segment metadata
                 </span>
@@ -145,6 +150,8 @@ export function HL7Viewer({ message, flow, messageContext, onMessageFieldUpdated
                         flow={flow}
                         messageContext={messageContext}
                         onMessageFieldUpdated={onMessageFieldUpdated}
+                        onDuplicateSegment={onDuplicateSegment}
+                        onDeleteSegment={onDeleteSegment}
                     />
                 ))}
             </div>

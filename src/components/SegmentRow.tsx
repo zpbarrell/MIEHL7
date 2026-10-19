@@ -11,6 +11,8 @@ interface SegmentRowProps {
     flow: HL7Flow;
     messageContext: MessageContext;
     onMessageFieldUpdated: () => void;
+    onDuplicateSegment: (index: number, name: string) => void;
+    onDeleteSegment: (index: number, name: string) => void;
 }
 
 const SEGMENT_COLORS: Record<string, string> = {
@@ -25,7 +27,7 @@ const SEGMENT_COLORS: Record<string, string> = {
     IN1: 'var(--segment-in1)',
 };
 
-export const SegmentRow = memo(function SegmentRow({ segment, index, flow, messageContext, onMessageFieldUpdated }: SegmentRowProps) {
+export const SegmentRow = memo(function SegmentRow({ segment, index, flow, messageContext, onMessageFieldUpdated, onDuplicateSegment, onDeleteSegment }: SegmentRowProps) {
     const [showTooltip, setShowTooltip] = useState(false);
     const [isPinned, setIsPinned] = useState(false);
     const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
@@ -179,6 +181,28 @@ export const SegmentRow = memo(function SegmentRow({ segment, index, flow, messa
             {/* Field count indicator */}
             <div className="segment-row__meta">
                 <span className="segment-row__field-count">{fieldCount}</span>
+                {segment.name !== 'MSH' && (
+                    <div className="segment-row__actions">
+                        <button
+                            type="button"
+                            className="segment-row__action"
+                            aria-label={`Duplicate ${segment.name} segment`}
+                            title={`Duplicate ${segment.name} segment`}
+                            onClick={() => onDuplicateSegment(index, segment.name)}
+                        >
+                            Duplicate
+                        </button>
+                        <button
+                            type="button"
+                            className="segment-row__action segment-row__action--delete"
+                            aria-label={`Delete ${segment.name} segment`}
+                            title={`Delete ${segment.name} segment`}
+                            onClick={() => onDeleteSegment(index, segment.name)}
+                        >
+                            Delete
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
